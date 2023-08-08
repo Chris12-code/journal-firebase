@@ -1,3 +1,20 @@
+# Documentation
+
+## Used technology
+Angular 15 and angularfire 7.
+
+Some great sources to get informed:
+* [https://github.com/angular/angularfire/tree/master/docs](Doc Angularfire)
+* [https://developers.google.com/codelabs/building-a-web-app-with-angular-and-firebase?hl=de#0](Reading)
+* [https://www.youtube.com/watch?v=HXSqKW4JCr4](Video)
+
+## Run application
+* ng serve
+
+## Deploy to firebase
+* ng build
+* firebase deploy
+
 # Test
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.8.

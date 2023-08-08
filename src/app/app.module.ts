@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 
+import { MatTable, MatTableModule } from '@angular/material/table'
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +14,10 @@ import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RescueOperationComponent } from './rescue-operation/rescue-operation.component';
 import { RescueOperationDialogComponent } from './rescue-operation-dialog/rescue-operation-dialog.component';
+import { environment } from 'src/environments/environment';
+import  { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { initializeApp } from 'firebase/app';
+import { provideFirebaseApp } from '@angular/fire/app';
 
 @NgModule({
   declarations: [
@@ -29,7 +34,10 @@ import { RescueOperationDialogComponent } from './rescue-operation-dialog/rescue
     MatCardModule,
     BrowserModule,
     MatToolbarModule,
-    MatIconModule
+    MatIconModule,
+    MatTableModule,
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideFirestore(() => getFirestore())
   ],
   providers: [],
   bootstrap: [AppComponent]

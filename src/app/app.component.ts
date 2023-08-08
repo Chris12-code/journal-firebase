@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { RescueOperation } from './rescue-operation/rescue-operation';
+import { Observable, isEmpty } from 'rxjs';
+import { Firestore, collection, addDoc, collectionData, doc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { RescueOperationDialogComponent, RescueOperationDialogResult } from './rescue-operation-dialog/rescue-operation-dialog.component';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-root',
@@ -9,39 +12,85 @@ import { RescueOperationDialogComponent, RescueOperationDialogResult } from './r
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  dataSource: MatTableDataSource<RescueOperation>;
+
   title = 'journal-firebase';
+  operations!: Observable<any>;
+  rescueOperations: RescueOperation[] = [];
+  displayedColumns: string[] = ['operationalLocation', 'destinationLocation', 'action'];
 
-  operations: RescueOperation[] = [
-    {
-      id: '123',
-      operationalLocation: 'whg1',
-      destinationLocation: 'lkh1'
-    },
-    {
-      id: '1234',
-      operationalLocation: 'whg2',
-      destinationLocation: 'lkh2'
-    }
-  ];
-
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialog: MatDialog, private firestore: Firestore) {
+    this.getRescueOperations();
+    this.dataSource = new MatTableDataSource(this.rescueOperations);
+  }
 
   newRescueOperation(): void {
-    console.log("before");
     const dialogRef = this.dialog.open(RescueOperationDialogComponent, {
       width: '270px',
       data: {
         rescueOperation: {},
       },
     });
-    console.log("middle");
+
     dialogRef
       .afterClosed()
       .subscribe((result: RescueOperationDialogResult|undefined) => {
         if(!result) {
           return;
         }
-        this.operations.push(result.rescueOperation);
+        this.rescueOperations.push(result.rescueOperation);
+
+        const collectionInstance = collection(this.firestore, 'rescue-operation');
+        addDoc(collectionInstance, result.rescueOperation).then(() => {
+          console.log('Data saved successfully');
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+
       });
+  }
+
+  getRescueOperations() {
+    const collectionInstance = collection(this.firestore, 'rescue-operation');
+    var tempRescueOperations: any[] = [];
+    collectionData(collectionInstance, { idField: 'id' })
+      .subscribe(val => {
+        console.log(val);
+        this.rescueOperations = []
+        val.forEach(element => {
+          let temp = new RescueOperation(element["id"], element["operationalLocation"], element["destinationLocation"]);
+          this.rescueOperations.push(temp);
+          this.dataSource = new MatTableDataSource(this.rescueOperations);
+        })
+    });
+
+    this.operations = collectionData(collectionInstance, { idField: 'id' });
+  }
+
+  updateRescueOperation(id: string) {
+    const docInstance = doc(this.firestore, 'rescue-operation', id);
+    const updateData = {
+      destinationLocation: 'updatedDestination'
+    }
+
+    updateDoc(docInstance, updateData)
+    .then(() => {
+      console.log('data updated');
+    })
+    .catch((e) => {
+      console.log(e);
+    })
+  }
+
+  deleteRescueOperation(id: string) {
+    const docInstance = doc(this.firestore, 'rescue-operation', id);
+    deleteDoc(docInstance)
+    .then(() => {
+      console.log('data is deleted');
+    })
+    .catch((e) => {
+      console.log(e);
+    })
   }
 }

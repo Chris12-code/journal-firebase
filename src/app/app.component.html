@@ -1,0 +1,16 @@
+<mat-toolbar color="primary">
+  <mat-icon>local_hospital</mat-icon>
+  <span>RK Strobl Journalblatt</span>
+</mat-toolbar>
+
+<div class="content-wrapper">
+  <button (click)="newRescueOperation()" mat-button>
+    <mat-icon>add</mat-icon> Einsatz erstellen
+  </button>
+
+  <div class="content-wrapper">
+    <div class="container">
+      <app-rescue-operation *ngFor="let rescueOperation of operations" [rescueOperation]="rescueOperation"></app-rescue-operation>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { RescueOperation } from './rescue-operation/rescue-operation';
+import { RescueOperation, Patient, RescueCategory, RescueType } from './rescue-operation/rescue-operation';
 import { Observable, isEmpty } from 'rxjs';
 import { Firestore, collection, addDoc, collectionData, doc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { RescueOperationDialogComponent, RescueOperationDialogResult } from './rescue-operation-dialog/rescue-operation-dialog.component';
@@ -17,7 +17,10 @@ export class AppComponent {
   title = 'journal-firebase';
   operations!: Observable<any>;
   rescueOperations: RescueOperation[] = [];
-  displayedColumns: string[] = ['operationalLocation', 'destinationLocation', 'action'];
+  displayedColumns: string[] = ['rescueType', 'rescueCategory', 'patient', 
+    'operationalLocation', 'destinationLocation', 'action'
+  ];
+
 
   constructor(private dialog: MatDialog, private firestore: Firestore) {
     this.getRescueOperations();
@@ -59,10 +62,12 @@ export class AppComponent {
         console.log(val);
         this.rescueOperations = []
         val.forEach(element => {
-          let temp = new RescueOperation(element["id"], element["operationalLocation"], element["destinationLocation"]);
+          let temp = new RescueOperation(element["id"], element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
+          //let temp = new RescueOperation(element["id"], Patient.CHILD, RescueType.RD, RescueCategory.CHILD,  element["operationalLocation"], element["destinationLocation"]);
           this.rescueOperations.push(temp);
           this.dataSource = new MatTableDataSource(this.rescueOperations);
         })
+        console.log(this.rescueOperations)
     });
 
     this.operations = collectionData(collectionInstance, { idField: 'id' });

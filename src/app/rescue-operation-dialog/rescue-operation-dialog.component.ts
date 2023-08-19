@@ -17,6 +17,9 @@ export class RescueOperationDialogComponent {
   ) { }
 
   cancel(): void {
+    this.data.rescueOperation.rescueType = this.backupOperation.rescueType;
+    this.data.rescueOperation.rescueCategory = this.backupOperation.rescueCategory;
+    this.data.rescueOperation.patient = this.backupOperation.patient;
     this.data.rescueOperation.operationalLocation = this.backupOperation.operationalLocation;
     this.data.rescueOperation.destinationLocation = this.backupOperation.destinationLocation;
     this.dialogRef.close(this.data);

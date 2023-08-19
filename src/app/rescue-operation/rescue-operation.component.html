@@ -1,6 +1,6 @@
 <mat-card class="item" *ngIf="rescueOperation" (dblclick)="edit.emit(rescueOperation)">
-    <h2>{{ rescueOperation.id }}</h2>
+    <h2>{{ rescueOperation.getId }}</h2>
     <p>
-      {{ rescueOperation.operationalLocation }}
+      {{ rescueOperation.getOperationalLocation }}
     </p>
 </mat-card>

@@ -1,5 +1,11 @@
+import { RescueOperationService as MockRescueOperationService } from "src/app/services/rescue-operation.mock.service";
+import { RescueOperationService } from "src/app/services/rescue-operation.service";
+
 export const environment = {
   production: false,
+  providers: [
+    { provide: MockRescueOperationService, useClass: RescueOperationService },
+  ],
   firebase: {
     apiKey: "AIzaSyC_JozUyB_czB8HLKHeD30q-c_H1nJhwSI",
     authDomain: "rk-strobl-journalblatt.firebaseapp.com",

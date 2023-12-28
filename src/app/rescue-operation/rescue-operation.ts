@@ -1,68 +1,69 @@
 export class RescueOperation {
-    private id: String;
-    public patient: Patient;
-    public rescueType: RescueType;
-    public rescueCategory: RescueCategory;
-    public operationalLocation: String;
-    public destinationLocation: String;
+    public id?: string;
+    public patient?: string | null;
+    public rescueType?: string | null;
+    public rescueCategory?: string | null;
+    public operationalLocation?: string | null;
+    public destinationLocation?: string | null;
 
     constructor(
-        id: String, patient: Patient, rescueType: RescueType, rescueCategory: RescueCategory,
-        operationalLocation: String, destinationLocation: String
+        patient?: string, rescueType?: string, rescueCategory?: string,
+        operationalLocation?: string, destinationLocation?: string
     ) {
-        this.id = id;
-        this.rescueType = rescueType;
-        this.rescueCategory = rescueCategory;
-        this.patient = patient;
-        this.operationalLocation = operationalLocation;
-        this.destinationLocation = destinationLocation;
+        this.patient = patient != null ? patient : null;
+        this.rescueType = rescueType != null ? rescueType : null;
+        this.rescueCategory = rescueCategory != null ? rescueCategory : null;
+        this.operationalLocation = operationalLocation != null ? operationalLocation : null;
+        this.destinationLocation = destinationLocation != null ? destinationLocation : null;
     }
 
-    public getRescueType(): RescueType {
+    /* public getRescueType(): string {
         return this.rescueType;
-    }
+    } */
 
-    public setRescueType(value: RescueType) {
+    public setRescueType(value: string) {
         this.rescueType = value;
     }
 
-    public getRescueCategory(): RescueCategory {
+    /* public getRescueCategory(): string {
         return this.rescueCategory;
-    }
+    } */
     
-    public setRescueCategory(value: RescueCategory) {
+    public setRescueCategory(value: string) {
         this.rescueCategory = value;
     }
 
-    public getPatient(): Patient {
+    /* public getPatient(): string {
         return this.patient;
-    }
+    } */
 
-    public setPatient(patient: Patient) {
+    public setPatient(patient: string) {
         this.patient = patient;
     }
 
-    public getId(): String {
+    /* public getId(): string {
         return this.id;
-    }
+    } */
 
-    setId(id: String): void {
+    setId(id: string): void {
         this.id = id;
     }
 
-    public getOperationalLocation(): String {
+    /* public getOperationalLocation(): string {
         return this.operationalLocation;
-    }
+    } */
 
-    public setOperationalLocation(operationalLocation: String): void {
+    public setOperationalLocation(operationalLocation: string): void {
         this.operationalLocation = operationalLocation;
     }
 
-    public getDestinationLocation(): String {
+    /*
+    public getDestinationLocation(): string {
         return this.destinationLocation;
     }
+    */
 
-    public setDestinationLocation(destinationLocation: String): void {
+    public setDestinationLocation(destinationLocation: string): void {
         this.destinationLocation = destinationLocation;
     }
 }

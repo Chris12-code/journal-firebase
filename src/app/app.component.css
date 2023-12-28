@@ -1,0 +1,18 @@
+.mat-toolbar {
+    background-color: gray; /* You can set your desired background color */
+    color: #ffffff; /* You can set your desired text color */
+    padding: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.mat-toolbar img {
+    max-width: 100%;
+    height: auto;
+    margin-right: 10px; /* Adjust as needed */
+}
+
+.mat-toolbar span {
+    font-size: 20px;
+    font-weight: bold;
+}

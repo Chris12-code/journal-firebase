@@ -17,7 +17,7 @@
       </div>
 
       <div class="form-group">
-        <label for="rescueType">Type</label>
+        <label for="rescueType">Typ</label>
         <select class="form-control" id="rescueType"
                 required
                 [(ngModel)]="rescueOperation.rescueType" name="rescueType"
@@ -30,7 +30,7 @@
       </div>
 
       <div class="form-group">
-        <label for="rescueCategory">Category</label>
+        <label for="rescueCategory">Kategorie</label>
         <select class="form-control" id="rescueCategory"
                 required
                 [(ngModel)]="rescueOperation.rescueCategory" name="rescueCategory"
@@ -56,7 +56,7 @@
                minlength="3">
       </div>
 
-      <button type="button" class="btn btn-default" [disabled]="!rescueOperationForm.form.valid" (click)="newOperation(); rescueOperationForm.reset()">New Operation</button>
+      <button type="button" class="btn btn-default" [disabled]="!rescueOperationForm.form.valid" (click)="newOperation(); rescueOperationForm.reset()">Anlegen</button>
     </form>
   </div>
 

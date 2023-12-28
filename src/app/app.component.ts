@@ -38,11 +38,13 @@ export class AppComponent {
     dialogRef
       .afterClosed()
       .subscribe((result: RescueOperationDialogResult|undefined) => {
+        console.log('Data received');
+        console.log(result);
         if(!result) {
+          console.log("Result invalid");
           return;
         }
         this.rescueOperations.push(result.rescueOperation);
-
         const collectionInstance = collection(this.firestore, 'rescue-operation');
         addDoc(collectionInstance, result.rescueOperation).then(() => {
           console.log('Data saved successfully');
@@ -62,7 +64,8 @@ export class AppComponent {
         console.log(val);
         this.rescueOperations = []
         val.forEach(element => {
-          let temp = new RescueOperation(element["id"], element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
+          let temp = new RescueOperation(
+            element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
           //let temp = new RescueOperation(element["id"], Patient.CHILD, RescueType.RD, RescueCategory.CHILD,  element["operationalLocation"], element["destinationLocation"]);
           this.rescueOperations.push(temp);
           this.dataSource = new MatTableDataSource(this.rescueOperations);

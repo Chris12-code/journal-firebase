@@ -12,7 +12,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { RescueOperationComponent } from './rescue-operation/rescue-operation.component';
 import { RescueOperationDialogComponent } from './rescue-operation-dialog/rescue-operation-dialog.component';
 import { environment } from 'src/environments/environment';
 import  { provideFirestore, getFirestore } from '@angular/fire/firestore';
@@ -22,7 +21,6 @@ import { provideFirebaseApp } from '@angular/fire/app';
 @NgModule({
   declarations: [
     AppComponent,
-    RescueOperationComponent,
     RescueOperationDialogComponent
   ],
   imports: [

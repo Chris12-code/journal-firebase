@@ -1,31 +1,63 @@
-<div class="parent-mat-form-field">
-  <mat-form-field>
-    <mat-label>Transportart</mat-label>
-    <input matInput cdkFocusInitial [(ngModel)]="data.rescueOperation.rescueType" />
-  </mat-form-field>
+<div class="container">
+  <div [hidden]="submitted">
+    <h1>Neuer Einsatz</h1>
+    <form (ngSubmit)="onSubmit()" #rescueOperationForm="ngForm">
 
-  <mat-form-field>
-    <mat-label>Einsatzkategorie</mat-label>
-    <input matInput cdkFocusInitial [(ngModel)]="data.rescueOperation.rescueCategory" />
-  </mat-form-field>
+      <div class="form-group">
+        <label for="patient">Patient</label>
+        <select class="form-control" id="patient"
+                required
+                [(ngModel)]="rescueOperation.patient" name="patient"
+                #patient="ngModel">
+          <option *ngFor="let patient of patients" [value]="patient">{{patient}}</option>
+        </select>
+        <div [hidden]="patient.valid || patient.pristine" class="alert alert-danger">
+          Patient is required
+        </div>
+      </div>
 
-  <mat-form-field>
-    <mat-label>Patient</mat-label>
-    <input matInput cdkFocusInitial [(ngModel)]="data.rescueOperation.patient" />
-  </mat-form-field>
+      <div class="form-group">
+        <label for="rescueType">Typ</label>
+        <select class="form-control" id="rescueType"
+                required
+                [(ngModel)]="rescueOperation.rescueType" name="rescueType"
+                #rescueType="ngModel">
+          <option *ngFor="let rescueType of types" [value]="rescueType">{{rescueType}}</option>
+        </select>
+        <div [hidden]="rescueType.valid || rescueType.pristine" class="alert alert-danger">
+          Type is required
+        </div>
+      </div>
 
-  <mat-form-field>
-      <mat-label>Einsatzort</mat-label>
-      <input matInput cdkFocusInitial [(ngModel)]="data.rescueOperation.operationalLocation" />
-  </mat-form-field>
-    
-  <mat-form-field>
-      <mat-label>Zielort</mat-label>
-      <textarea matInput [(ngModel)]="data.rescueOperation.destinationLocation"></textarea>
-  </mat-form-field>
-    
-  <div mat-dialog-actions>
-    <button mat-button [mat-dialog-close]="{ rescueOperation: data.rescueOperation }">Anlegen</button>
-    <button mat-button (click)="cancel()">Abbrechen</button>
+      <div class="form-group">
+        <label for="rescueCategory">Kategorie</label>
+        <select class="form-control" id="rescueCategory"
+                required
+                [(ngModel)]="rescueOperation.rescueCategory" name="rescueCategory"
+                #rescueCategory="ngModel">
+          <option *ngFor="let rescueCategory of categories" [value]="rescueCategory">{{rescueCategory}}</option>
+        </select>
+        <div [hidden]="rescueCategory.valid || rescueCategory.pristine" class="alert alert-danger">
+          Category is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="operationalLocation">Einsatzort</label>
+        <input type="text" class="form-control" id="operationalLocation"
+               [(ngModel)]="rescueOperation.operationalLocation" name="operationalLocation"
+               minlength="3">
+      </div>
+
+      <div class="form-group">
+        <label for="destinationLocation">Zielort</label>
+        <input type="text" class="form-control" id="destinationLocation"
+               [(ngModel)]="rescueOperation.destinationLocation" name="destinationLocation"
+               minlength="3">
+      </div>
+
+      <button type="button" class="btn btn-default" [disabled]="!rescueOperationForm.form.valid" (click)="newOperation(); rescueOperationForm.reset()">Anlegen</button>
+    </form>
   </div>
+
 </div>

@@ -17,11 +17,13 @@ import { environment } from 'src/environments/environment';
 import  { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { initializeApp } from 'firebase/app';
 import { provideFirebaseApp } from '@angular/fire/app';
+import { TourDialogComponent } from './tour-dialog/tour-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    RescueOperationDialogComponent
+    RescueOperationDialogComponent,
+    TourDialogComponent
   ],
   imports: [
     BrowserAnimationsModule,

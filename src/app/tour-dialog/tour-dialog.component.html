@@ -1,0 +1,31 @@
+<div class="container">
+    <div [hidden]="submitted">
+        <h1>Neue Tour</h1>
+        <form (ngSubmit)="onSubmit()" #tourForm="ngForm">
+
+            <div class="form-group">
+                <label for="driver">Fahrer</label>
+                <input type="text" class="form-control" id="driver"
+                       [(ngModel)]="tour.driver" name="driver"
+                       minlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="tpf">TPF</label>
+                <input type="text" class="form-control" id="tpf"
+                       [(ngModel)]="tour.tpf" name="tpf"
+                       minlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="third">Beifahrer</label>
+                <input type="text" class="form-control" id="third"
+                       [(ngModel)]="tour.third" name="third"
+                       minlength="3">
+            </div>
+
+            <button type="button" class="btn btn-default" [disabled]="!tourForm.form.valid" (click)="newTour(); tourForm.reset()">Anlegen</button>
+        </form>
+    </div>
+
+</div>

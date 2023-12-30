@@ -1,0 +1,70 @@
+{
+  "persons": [
+    {
+      "name": "Beer Sebastian",
+      "number": "07414",
+      "telephone": "0043 6602728355",
+      "email": "sebastian.beer.95@gmail.com"
+    },
+    {
+      "name": "Beinsteiner Michael",
+      "number": "18459",
+      "telephone": "0043 6602448704",
+      "email": "beinsteiner15@gmail.com"
+    },
+    {
+      "name": "Beshiri Joana-Magdalena",
+      "number": "21477",
+      "telephone": "0043 6644540466",
+      "email": "joana.beshiri@hotmail.com"
+    },
+    {
+      "name": "Billinger Sophie",
+      "number": "19509",
+      "telephone": "0043 66473402967",
+      "email": "sophie.billinger@gmail.com"
+    },
+    {
+      "name": "Bonomo Helena Emilia",
+      "number": "22044",
+      "telephone": "0043 6603995754",
+      "email": "helena.bonomo05@gmail.com"
+    },
+    {
+      "name": "Brandstätter Teresa",
+      "number": "12269",
+      "telephone": "0043 6642718181",
+      "email": "teresa.brandstaetter@s.roteskreuz.at"
+    },
+    {
+      "name": "Braunstein Christina",
+      "number": "12663",
+      "telephone": "0043 6603554571",
+      "email": "christina.braunstein@s.roteskreuz.at"
+    },
+    {
+      "name": "Carda Martin",
+      "number": "06707",
+      "telephone": "0043 6643435156",
+      "email": "martin.carda@s.roteskreuz.at"
+    },
+    {
+      "name": "Eder Hannah",
+      "number": "19507",
+      "telephone": "0043 67761805378",
+      "email": "ederhannah01@gmail.com"
+    },
+    {
+      "name": "Egger Andrea",
+      "number": "03236",
+      "telephone": "0043 6602208009",
+      "email": "andrea.unterberger@s.roteskreuz.at"
+    },
+    {
+      "name": "Egger Maximilian",
+      "number": "16769",
+      "telephone": "0043 6641615866",
+      "email": "egger.maximilian@outlook.com"
+    }
+  ]
+}

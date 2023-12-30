@@ -1,18 +1,24 @@
 .mat-toolbar {
-    background-color: gray; /* You can set your desired background color */
+    background-color: #9f9f9f; /* You can set your desired background color */
     color: #ffffff; /* You can set your desired text color */
-    padding: 10px;
+    padding: 0px;
     display: flex;
     align-items: center;
+    margin-bottom: 10px;
+    height: 80px; /* Set a fixed height for the mat-toolbar */
 }
 
 .mat-toolbar img {
-    max-width: 100%;
-    height: auto;
+    height: 80px;
+    width: 169px;
     margin-right: 10px; /* Adjust as needed */
 }
 
 .mat-toolbar span {
     font-size: 20px;
     font-weight: bold;
+}
+
+.operationsView {
+    margin-top: 10px;
 }

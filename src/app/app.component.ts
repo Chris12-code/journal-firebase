@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { RescueOperation, Patient, RescueCategory, RescueType } from './model/rescue-operation';
+import { RescueOperation } from './model/rescue-operation';
 import { Observable, isEmpty } from 'rxjs';
 import { Firestore, collection, addDoc, collectionData, doc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { RescueOperationDialogComponent, RescueOperationDialogResult } from './rescue-operation-dialog/rescue-operation-dialog.component';
@@ -52,7 +52,7 @@ export class AppComponent {
     this.operationsView = true;
   }
 
-  newTourRtwDay(): void {
+  newTour(): void {
     const dialogRef = this.dialog.open(TourDialogComponent, {
       width: '270px',
       data: {

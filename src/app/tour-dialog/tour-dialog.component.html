@@ -4,6 +4,19 @@
         <form (ngSubmit)="onSubmit()" #tourForm="ngForm">
 
             <div class="form-group">
+                <label for="type">Typ</label>
+                <select class="form-control" id="type"
+                        required
+                        [(ngModel)]="tour.type" name="type"
+                        #type="ngModel">
+                    <option *ngFor="let type of types" [value]="type">{{ type }}</option>
+                </select>
+                <div [hidden]="type.valid || type.pristine" class="alert alert-danger">
+                    Type is required
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="driver">Fahrer</label>
                 <input type="text" class="form-control" id="driver"
                        [(ngModel)]="tour.driver" name="driver"
@@ -24,7 +37,27 @@
                        minlength="3">
             </div>
 
-            <button type="button" class="btn btn-default" [disabled]="!tourForm.form.valid" (click)="newTour(); tourForm.reset()">Anlegen</button>
+            <mat-form-field>
+                <input matInput [ngxMatDatetimePicker]="pickerStart" placeholder="Dienststart">
+                <mat-datepicker-toggle matSuffix [for]="$any(pickerStart)"></mat-datepicker-toggle>
+                <ngx-mat-datetime-picker #pickerStart [showSpinners]="true" [showSeconds]="false"
+                                         [stepHour]="1" [stepMinute]="5" [stepSecond]="60"
+                                         [disableMinute]="true">
+                </ngx-mat-datetime-picker>
+            </mat-form-field>
+
+            <mat-form-field>
+                <input matInput [ngxMatDatetimePicker]="pickerEnd" placeholder="Dienstende">
+                <mat-datepicker-toggle matSuffix [for]="$any(pickerEnd)"></mat-datepicker-toggle>
+                <ngx-mat-datetime-picker #pickerEnd [showSpinners]="true" [showSeconds]="false"
+                                         [stepHour]="1" [stepMinute]="5" [stepSecond]="60"
+                                         [disableMinute]="true">
+                </ngx-mat-datetime-picker>
+            </mat-form-field>
+
+            <button type="button" class="btn btn-default" [disabled]="!tourForm.form.valid"
+                    (click)="newTour(); tourForm.reset()">Anlegen
+            </button>
         </form>
     </div>
 

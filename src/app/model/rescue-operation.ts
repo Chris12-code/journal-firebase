@@ -67,21 +67,3 @@ export class RescueOperation {
         this.destinationLocation = destinationLocation;
     }
 }
-
-export enum RescueType {
-    NA = 'NA',
-    RD = 'RD',
-    KT = 'KT'
-}
-
-export enum RescueCategory {
-    CPR = 'CPR',
-    VU = 'VU',
-    CHILD = 'KINDER'
-}
-
-export enum Patient {
-    MALE = 'M',
-    FEMALE = 'F',
-    CHILD = 'K'
-}

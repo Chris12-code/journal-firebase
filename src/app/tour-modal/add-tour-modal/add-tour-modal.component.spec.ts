@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TourDialogComponent } from './tour-dialog.component';
+import { AddTourModalComponent } from './add-tour-modal.component';
 
 describe('TourDialogComponent', () => {
-  let component: TourDialogComponent;
-  let fixture: ComponentFixture<TourDialogComponent>;
+  let component: AddTourModalComponent;
+  let fixture: ComponentFixture<AddTourModalComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [TourDialogComponent]
+      declarations: [AddTourModalComponent]
     });
-    fixture = TestBed.createComponent(TourDialogComponent);
+    fixture = TestBed.createComponent(AddTourModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

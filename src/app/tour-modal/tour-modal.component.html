@@ -1,0 +1,60 @@
+<div class="content-wrapper operationsView">
+    <div class="content-wrapper">
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Tagdienst</div>
+            <button style="float: right" (click)="newTour()" mat-button>
+                <mat-icon>add</mat-icon>
+            </button>
+            <table mat-table [dataSource]="dataSourceTours" class="mat-elevation-z8">
+                <tr mat-header-row *matHeaderRowDef="displayedColumnsTours"></tr>
+                <tr mat-row *matRowDef="let myRowData; columns: displayedColumnsTours"></tr>
+                <ng-container matColumnDef="driver">
+                    <th mat-header-cell *matHeaderCellDef> Fahrer</th>
+                    <td mat-cell *matCellDef="let tour"> {{ tour.driver }}</td>
+                </ng-container>
+                <ng-container matColumnDef="tpf">
+                    <th mat-header-cell *matHeaderCellDef> Transportführer</th>
+                    <td mat-cell *matCellDef="let tour"> {{ tour.tpf }}</td>
+                </ng-container>
+                <ng-container matColumnDef="third">
+                    <th mat-header-cell *matHeaderCellDef> Beifahrer</th>
+                    <td mat-cell *matCellDef="let tour"> {{ tour.third }}</td>
+                </ng-container>
+                <!-- Action Column -->
+                <ng-container matColumnDef="action">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let operation" class="action-link">
+                        <button (click)="updateRescueOperation(operation.id)">
+                            <mat-icon>edit</mat-icon>
+                        </button> &nbsp;
+                        <button (click)="deleteRescueOperation(operation.id)">
+                            <mat-icon>delete_forever</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+            </table>
+        </div>
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Nachtdienst RTW</div>
+        </div>
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Tagdienst KTW</div>
+        </div>
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Nachtdienst KTW</div>
+        </div>
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Tagdienst BTW</div>
+        </div>
+
+        <div class="container">
+            <div style="font: bold; margin-bottom: 10px">Nachtdienst BTW</div>
+        </div>
+
+    </div>
+</div>

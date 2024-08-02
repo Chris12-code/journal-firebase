@@ -12,12 +12,12 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {MatInputModule} from '@angular/material/input';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {RescueOperationDialogComponent} from './rescue-operation-dialog/rescue-operation-dialog.component';
+import {RescueOperationDialogComponent} from './rescue-operation-modal/rescue-operation-dialog/rescue-operation-dialog.component';
 import {environment} from 'src/environments/environment';
 import {provideFirestore, getFirestore} from '@angular/fire/firestore';
 import {initializeApp} from 'firebase/app';
 import {provideFirebaseApp} from '@angular/fire/app';
-import {TourDialogComponent} from './tour-dialog/tour-dialog.component';
+import {AddTourModalComponent} from './tour-modal/add-tour-modal/add-tour-modal.component';
 import {
     NgxMatDatetimePickerModule,
     NgxMatNativeDateModule,
@@ -28,12 +28,17 @@ import {MatRadioModule} from "@angular/material/radio";
 import {MatSelectModule} from "@angular/material/select";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatNativeDateModule} from '@angular/material/core';
+import {TourModalComponent} from "./tour-modal/tour-modal.component";
+import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-operation-modal.component";
 
 @NgModule({
     declarations: [
         AppComponent,
         RescueOperationDialogComponent,
-        TourDialogComponent,
+        AddTourModalComponent,
+        TourModalComponent,
+        RescueOperationModalComponent,
+        RescueOperationDialogComponent
     ],
     imports: [
         BrowserAnimationsModule,

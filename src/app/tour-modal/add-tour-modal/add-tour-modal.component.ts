@@ -1,7 +1,7 @@
 import {Component, Inject, ViewChild} from '@angular/core';
-import {Tour} from "../model/tour";
+import {Tour} from "../../model/tour";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {RescueOperationDialogResult} from "../rescue-operation-dialog/rescue-operation-dialog.component";
+import {RescueOperationDialogResult} from "../../rescue-operation-modal/rescue-operation-dialog/rescue-operation-dialog.component";
 
 export interface TourDialogResult {
     tour: Tour;
@@ -9,11 +9,11 @@ export interface TourDialogResult {
 }
 
 @Component({
-    selector: 'app-tour-dialog',
-    templateUrl: './tour-dialog.component.html',
-    styleUrls: ['./tour-dialog.component.css'],
+    selector: 'add-tour-modal',
+    templateUrl: './add-tour-modal.component.html',
+    styleUrls: ['./add-tour-modal.component.css'],
 })
-export class TourDialogComponent {
+export class AddTourModalComponent {
 
     @ViewChild('pickerStart') pickerStart: any;
     @ViewChild('pickerEnd') pickerEnd: any;
@@ -23,7 +23,7 @@ export class TourDialogComponent {
     tour = new Tour();
 
     constructor(
-        public dialogRef: MatDialogRef<TourDialogComponent>,
+        public dialogRef: MatDialogRef<AddTourModalComponent>,
         @Inject(MAT_DIALOG_DATA) public data: TourDialogResult
     ) {
     }

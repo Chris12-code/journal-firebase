@@ -1,10 +1,21 @@
 import {Component} from "@angular/core";
-import {AddTourModalComponent, TourDialogResult} from "./add-tour-modal/add-tour-modal.component";
+import {AddCarTourModalComponent, TourDialogResult} from "./car-tour/add-car-tour-modal/add-car-tour-modal.component";
 import {addDoc, collection, collectionData, deleteDoc, doc, Firestore, updateDoc} from "@angular/fire/firestore";
 import {MatDialog} from "@angular/material/dialog";
 import {MatTableDataSource} from "@angular/material/table";
 import {Tour} from "../model/tour";
 import {Observable} from "rxjs";
+
+export enum TourType {
+    RTW = 'RTW',
+    KTW = 'KTW',
+    BTW = 'BTW',
+}
+
+export enum TourShift {
+    DAY = 'DAY',
+    NIGHT = 'NIGHT',
+}
 
 @Component({
     selector: 'tour-modal',
@@ -16,34 +27,57 @@ export class TourModalComponent {
     toursResponse!: Observable<any>;
     dataSourceTours: MatTableDataSource<Tour>;
     tours: Tour[] = [];
-    displayedColumnsTours: string[] = ['driver', 'tpf', 'third', 'action'];
+    expandDayShift = false;
+    expandNightShift = false;
 
     constructor(private dialog: MatDialog, private firestore: Firestore) {
         this.getTours();
         this.dataSourceTours = new MatTableDataSource<Tour>(this.tours);
     }
 
+    getToursByTypeShiftAndCar(tourType: string, tourShift: TourShift, car: string): Tour[] {
+        console.log('getToursBy: ', tourType, '- ', this.tours.filter(tour => tour.type === tourType && tour.car === car && tour.tourShift === tourShift));
+        return this.tours.filter(tour => tour.type === tourType && tour.car === car && tour.tourShift === tourShift);
+    }
+
     getTours() {
         const collectionInstance = collection(this.firestore, 'tour');
-        var tempTours: any[] = [];
         collectionData(collectionInstance, { idField: 'id' })
             .subscribe(val => {
-                console.log(val);
                 this.tours = []
                 val.forEach(element => {
                     let temp = new Tour(
-                        element["driver"], element["tpf"] != null ? element["tpf"] : null, element["third"] != null ? element["third"] : null);
+                        element['type'] != null ? element['type'] : null,
+                        element['tourType'] != null ? element['tourType'] : null,
+                        element['tourShift'] != null ? element['tourShift'] : null,
+                        element["car"] != null ? element["car"] : null,
+                        element["driver"],
+                        element["tpf"] != null ? element["tpf"] : null,
+                        element["third"] != null ? element["third"] : null
+                    );
                     this.tours.push(temp);
                     this.dataSourceTours = new MatTableDataSource(this.tours);
                 })
-                console.log(this.tours)
+                console.log('Tours: ', this.tours);
+                console.log('Data Source Tours: ', this.dataSourceTours);
             });
 
         this.toursResponse = collectionData(collectionInstance, { idField: 'id' });
     }
 
+    createTour(tour: Tour) {
+        const collectionInstance = collection(this.firestore, 'tour');
+        addDoc(collectionInstance, tour)
+            .then(() => {
+                console.log('Data saved successfully');
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+    }
+
     newTour(): void {
-        const dialogRef = this.dialog.open(AddTourModalComponent, {
+        const dialogRef = this.dialog.open(AddCarTourModalComponent, {
             width: '270px',
             data: {
                 tour: {},
@@ -52,10 +86,10 @@ export class TourModalComponent {
 
         dialogRef
             .afterClosed()
-            .subscribe((result: TourDialogResult|undefined) => {
+            .subscribe((result: TourDialogResult | undefined) => {
                 console.log('Data received');
                 console.log(result);
-                if(!result) {
+                if (!result) {
                     console.log("Result invalid");
                     return;
                 }
@@ -97,4 +131,14 @@ export class TourModalComponent {
             })
     }
 
+    protected readonly TourType = TourType;
+    protected readonly TourShift = TourShift;
+
+    toggleExpansionDayShift() {
+        this.expandDayShift = !this.expandDayShift;
+    }
+
+    toggleExpansionNightShift() {
+        this.expandNightShift = !this.expandNightShift;
+    }
 }

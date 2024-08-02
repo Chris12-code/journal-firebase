@@ -1,0 +1,38 @@
+<div class="car-tour">
+    <div class="container">
+        <div style="font: bold; margin-bottom: 10px">
+            Tour: {{ tourType }} - Auto: {{ car }}
+            <button style="float: right" (click)="newTour()" mat-button>
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+        <table mat-table [dataSource]="dataSourceTours" class="mat-elevation-z8">
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsTours"></tr>
+            <tr mat-row *matRowDef="let myRowData; columns: displayedColumnsTours"></tr>
+            <ng-container matColumnDef="driver">
+                <th mat-header-cell *matHeaderCellDef> Fahrer</th>
+                <td mat-cell *matCellDef="let tour"> {{ tour.driver }}</td>
+            </ng-container>
+            <ng-container matColumnDef="tpf">
+                <th mat-header-cell *matHeaderCellDef> Transportführer</th>
+                <td mat-cell *matCellDef="let tour"> {{ tour.tpf }}</td>
+            </ng-container>
+            <ng-container matColumnDef="third">
+                <th mat-header-cell *matHeaderCellDef> Beifahrer</th>
+                <td mat-cell *matCellDef="let tour"> {{ tour.third }}</td>
+            </ng-container>
+            <!-- Action Column -->
+            <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let tour" class="action-link">
+                    <button (click)="updateTour(tour.id)">
+                        <mat-icon>edit</mat-icon>
+                    </button> &nbsp;
+                    <button (click)="deleteTour(tour.id)">
+                        <mat-icon>delete_forever</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+        </table>
+    </div>
+</div>

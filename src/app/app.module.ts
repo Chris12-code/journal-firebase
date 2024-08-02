@@ -3,7 +3,7 @@ import {BrowserModule} from '@angular/platform-browser';
 
 import {AppComponent} from './app.component';
 
-import {MatTable, MatTableModule} from '@angular/material/table'
+import {MatTableModule} from '@angular/material/table'
 import {MatCardModule} from '@angular/material/card';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatIconModule} from '@angular/material/icon';
@@ -17,7 +17,7 @@ import {environment} from 'src/environments/environment';
 import {provideFirestore, getFirestore} from '@angular/fire/firestore';
 import {initializeApp} from 'firebase/app';
 import {provideFirebaseApp} from '@angular/fire/app';
-import {AddTourModalComponent} from './tour-modal/add-tour-modal/add-tour-modal.component';
+import {AddCarTourModalComponent} from './tour-modal/car-tour/add-car-tour-modal/add-car-tour-modal.component';
 import {
     NgxMatDatetimePickerModule,
     NgxMatNativeDateModule,
@@ -30,15 +30,18 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatNativeDateModule} from '@angular/material/core';
 import {TourModalComponent} from "./tour-modal/tour-modal.component";
 import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-operation-modal.component";
+import {CarTourComponent} from "./tour-modal/car-tour/car-tour.component";
+import {MatGridListModule} from "@angular/material/grid-list";
 
 @NgModule({
     declarations: [
         AppComponent,
         RescueOperationDialogComponent,
-        AddTourModalComponent,
+        AddCarTourModalComponent,
         TourModalComponent,
         RescueOperationModalComponent,
-        RescueOperationDialogComponent
+        RescueOperationDialogComponent,
+        CarTourComponent,
     ],
     imports: [
         BrowserAnimationsModule,
@@ -68,7 +71,8 @@ import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-ope
         MatSelectModule,
         MatCheckboxModule,
         MatNativeDateModule,
-        NgxMatNativeDateModule
+        NgxMatNativeDateModule,
+        MatGridListModule
     ],
     providers: [MatDatepickerModule, MatNativeDateModule],
     bootstrap: [AppComponent]

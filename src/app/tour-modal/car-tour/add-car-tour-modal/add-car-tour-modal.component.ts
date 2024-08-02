@@ -1,7 +1,7 @@
 import {Component, Inject, ViewChild} from '@angular/core';
-import {Tour} from "../../model/tour";
+import {Tour} from "../../../model/tour";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {RescueOperationDialogResult} from "../../rescue-operation-modal/rescue-operation-dialog/rescue-operation-dialog.component";
+import {TourShift} from "../../tour-modal.component";
 
 export interface TourDialogResult {
     tour: Tour;
@@ -10,10 +10,10 @@ export interface TourDialogResult {
 
 @Component({
     selector: 'add-tour-modal',
-    templateUrl: './add-tour-modal.component.html',
-    styleUrls: ['./add-tour-modal.component.css'],
+    templateUrl: './add-car-tour-modal.component.html',
+    styleUrls: ['./add-car-tour-modal.component.css'],
 })
-export class AddTourModalComponent {
+export class AddCarTourModalComponent {
 
     @ViewChild('pickerStart') pickerStart: any;
     @ViewChild('pickerEnd') pickerEnd: any;
@@ -23,7 +23,7 @@ export class AddTourModalComponent {
     tour = new Tour();
 
     constructor(
-        public dialogRef: MatDialogRef<AddTourModalComponent>,
+        public dialogRef: MatDialogRef<AddCarTourModalComponent>,
         @Inject(MAT_DIALOG_DATA) public data: TourDialogResult
     ) {
     }
@@ -36,6 +36,9 @@ export class AddTourModalComponent {
 
     newTour() {
         this.data.tour.type = this.tour.type;
+        this.data.tour.tourType = this.tour.tourType;
+        this.data.tour.tourShift = TourShift.DAY
+        this.data.tour.car = '44.201';
         this.data.tour.driver = this.tour.driver;
         this.data.tour.tpf = this.tour.tpf;
         this.data.tour.third = this.tour.third;

@@ -105,7 +105,7 @@ export class RescueOperationModalComponent {
                     rescueCategory: result.rescueOperation.rescueCategory,
                     patient: result.rescueOperation.patient,
                     operationalLocation: result.rescueOperation.operationalLocation,
-                    destinationLocation: 'updatedDestination',
+                    destinationLocation: result.rescueOperation.destinationLocation,
                 }
 
                 updateDoc(docInstance, updateRescueOperation)

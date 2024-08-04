@@ -30,14 +30,13 @@ export class RescueOperationModalComponent {
 
     getRescueOperations() {
         const collectionInstance = collection(this.firestore, 'rescue-operation');
-        var tempRescueOperations: any[] = [];
         collectionData(collectionInstance, { idField: 'id' })
             .subscribe(val => {
                 console.log(val);
                 this.rescueOperations = []
                 val.forEach(element => {
                     let temp = new RescueOperation(
-                        element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
+                        element['id'], element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
                     this.rescueOperations.push(temp);
                     this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
                 })
@@ -91,8 +90,12 @@ export class RescueOperationModalComponent {
             })
     }
 
-    deleteRescueOperation(id: string) {
-        const docInstance = doc(this.firestore, 'rescue-operation', id);
+    deleteRescueOperation(rescueOperation: RescueOperation) {
+        console.log('Delete Rescue Operation: ', rescueOperation);
+        if (!rescueOperation.id) {
+            return;
+        }
+        const docInstance = doc(this.firestore, 'rescue-operation', rescueOperation.id);
         deleteDoc(docInstance)
             .then(() => {
                 console.log('data is deleted');

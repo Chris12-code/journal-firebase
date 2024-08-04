@@ -1,9 +1,8 @@
 import {Component} from "@angular/core";
-import {AddCarTourModalComponent, TourDialogResult} from "./car-tour/add-car-tour-modal/add-car-tour-modal.component";
 import {addDoc, collection, collectionData, deleteDoc, doc, Firestore, updateDoc} from "@angular/fire/firestore";
 import {MatDialog} from "@angular/material/dialog";
 import {MatTableDataSource} from "@angular/material/table";
-import {Tour} from "../model/tour";
+import {CarTour} from "../model/car-tour";
 import {Observable} from "rxjs";
 
 export enum TourType {
@@ -23,32 +22,33 @@ export enum TourShift {
     styleUrls: ['./tour-modal.component.css'],
 })
 export class TourModalComponent {
+    protected readonly TourType = TourType;
+    protected readonly TourShift = TourShift;
 
     toursResponse!: Observable<any>;
-    dataSourceTours: MatTableDataSource<Tour>;
-    tours: Tour[] = [];
+    dataSourceTours: MatTableDataSource<CarTour>;
+    tours: CarTour[] = [];
     expandDayShift = false;
     expandNightShift = false;
 
     constructor(private dialog: MatDialog, private firestore: Firestore) {
         this.getTours();
-        this.dataSourceTours = new MatTableDataSource<Tour>(this.tours);
+        this.dataSourceTours = new MatTableDataSource<CarTour>(this.tours);
     }
 
-    getToursByTypeShiftAndCar(tourType: string, tourShift: TourShift, car: string): Tour[] {
-        console.log('getToursBy: ', tourType, '- ', this.tours.filter(tour => tour.type === tourType && tour.car === car && tour.tourShift === tourShift));
-        return this.tours.filter(tour => tour.type === tourType && tour.car === car && tour.tourShift === tourShift);
+    getToursByTypeShiftAndCar(tourType: string, tourShift: TourShift, car: string): CarTour[] {
+        return this.tours.filter(tour => tour.tourType === tourType && tour.car === car && tour.tourShift === tourShift);
     }
 
     getTours() {
-        const collectionInstance = collection(this.firestore, 'tour');
+        const collectionInstance = collection(this.firestore, 'car-tour');
         collectionData(collectionInstance, { idField: 'id' })
             .subscribe(val => {
                 this.tours = []
                 val.forEach(element => {
-                    let temp = new Tour(
-                        element['type'] != null ? element['type'] : null,
-                        element['tourType'] != null ? element['tourType'] : null,
+                    let temp = new CarTour(
+                        element['id'],
+                        element['tourType'] != null ? this.mapTourType(element['tourType']) : undefined,
                         element['tourShift'] != null ? element['tourShift'] : null,
                         element["car"] != null ? element["car"] : null,
                         element["driver"],
@@ -58,15 +58,13 @@ export class TourModalComponent {
                     this.tours.push(temp);
                     this.dataSourceTours = new MatTableDataSource(this.tours);
                 })
-                console.log('Tours: ', this.tours);
-                console.log('Data Source Tours: ', this.dataSourceTours);
             });
 
         this.toursResponse = collectionData(collectionInstance, { idField: 'id' });
     }
 
-    createTour(tour: Tour) {
-        const collectionInstance = collection(this.firestore, 'tour');
+    createTour(tour: CarTour) {
+        const collectionInstance = collection(this.firestore, 'car-tour');
         addDoc(collectionInstance, tour)
             .then(() => {
                 console.log('Data saved successfully');
@@ -76,33 +74,19 @@ export class TourModalComponent {
             });
     }
 
-    newTour(): void {
-        const dialogRef = this.dialog.open(AddCarTourModalComponent, {
-            width: '270px',
-            data: {
-                tour: {},
-            },
-        });
-
-        dialogRef
-            .afterClosed()
-            .subscribe((result: TourDialogResult | undefined) => {
-                console.log('Data received');
-                console.log(result);
-                if (!result) {
-                    console.log("Result invalid");
-                    return;
-                }
-
-                const collectionInstance = collection(this.firestore, 'tour');
-                addDoc(collectionInstance, result.tour).then(() => {
-                    console.log('Data saved successfully');
-                })
-                    .catch((e) => {
-                        console.log(e);
-                    });
-
-            });
+    deleteTour(tour: CarTour) {
+        console.log('Delete Tour: ', tour);
+        if (!tour.id) {
+            return;
+        }
+        const docInstance = doc(this.firestore, 'car-tour', tour.id);
+        deleteDoc(docInstance)
+            .then(() => {
+                console.log('data is deleted');
+            })
+            .catch((e) => {
+                console.log(e);
+            })
     }
 
     updateRescueOperation(id: string) {
@@ -120,25 +104,24 @@ export class TourModalComponent {
             })
     }
 
-    deleteRescueOperation(id: string) {
-        const docInstance = doc(this.firestore, 'rescue-operation', id);
-        deleteDoc(docInstance)
-            .then(() => {
-                console.log('data is deleted');
-            })
-            .catch((e) => {
-                console.log(e);
-            })
-    }
-
-    protected readonly TourType = TourType;
-    protected readonly TourShift = TourShift;
-
     toggleExpansionDayShift() {
         this.expandDayShift = !this.expandDayShift;
     }
 
     toggleExpansionNightShift() {
         this.expandNightShift = !this.expandNightShift;
+    }
+
+    private mapTourType(tourType: string): TourType | undefined {
+        switch (tourType) {
+            case 'RTW':
+                return TourType.RTW;
+            case 'KTW':
+                return TourType.KTW;
+            case 'BTW':
+                return TourType.BTW;
+            default:
+                return undefined;
+        }
     }
 }

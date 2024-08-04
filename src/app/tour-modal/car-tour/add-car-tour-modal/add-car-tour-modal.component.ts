@@ -1,10 +1,10 @@
 import {Component, Inject, ViewChild} from '@angular/core';
-import {Tour} from "../../../model/tour";
+import {CarTour} from "../../../model/car-tour";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {TourShift} from "../../tour-modal.component";
+import {TourShift, TourType} from "../../tour-modal.component";
 
 export interface TourDialogResult {
-    tour: Tour;
+    tour: CarTour;
     delete?: boolean;
 }
 
@@ -18,9 +18,7 @@ export class AddCarTourModalComponent {
     @ViewChild('pickerStart') pickerStart: any;
     @ViewChild('pickerEnd') pickerEnd: any;
 
-    types = ['RTW', 'KTW', 'BTW'];
-
-    tour = new Tour();
+    tour = new CarTour();
 
     constructor(
         public dialogRef: MatDialogRef<AddCarTourModalComponent>,
@@ -35,7 +33,6 @@ export class AddCarTourModalComponent {
     }
 
     newTour() {
-        this.data.tour.type = this.tour.type;
         this.data.tour.tourType = this.tour.tourType;
         this.data.tour.tourShift = TourShift.DAY
         this.data.tour.car = '44.201';
@@ -45,4 +42,7 @@ export class AddCarTourModalComponent {
         this.dialogRef.close(this.data);
     }
 
+    getTourTypes(): string[] {
+        return Object.values(TourType);
+    }
 }

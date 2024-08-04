@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
-import {Tour} from "../../model/tour";
+import {CarTour} from "../../model/car-tour";
 import {TourShift, TourType} from "../tour-modal.component";
 import {AddCarTourModalComponent, TourDialogResult} from "./add-car-tour-modal/add-car-tour-modal.component";
 import {MatDialog} from "@angular/material/dialog";
@@ -14,11 +14,12 @@ export class CarTourComponent implements OnChanges {
     @Input() tourType!: TourType;
     @Input() tourShift!: TourShift;
     @Input() car!: string;
-    @Input() tours!: Tour[]
-    @Output() changeTour = new EventEmitter<Tour>();
-    @Output() addTour = new EventEmitter<Tour>();
+    @Input() tours!: CarTour[]
+    @Output() changeTour = new EventEmitter<CarTour>();
+    @Output() addTour = new EventEmitter<CarTour>();
+    @Output() removeTour = new EventEmitter<CarTour>();
 
-    dataSourceTours: MatTableDataSource<Tour> = new MatTableDataSource<Tour>();
+    dataSourceTours: MatTableDataSource<CarTour> = new MatTableDataSource<CarTour>();
     displayedColumnsTours: string[] = ['driver', 'tpf', 'third', 'action'];
 
     constructor(private dialog: MatDialog) {
@@ -26,7 +27,7 @@ export class CarTourComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges) {
         if(changes['tours']) {
-            this.dataSourceTours = new MatTableDataSource<Tour>(this.tours);
+            this.dataSourceTours = new MatTableDataSource<CarTour>(this.tours);
         }
     }
 
@@ -56,7 +57,7 @@ export class CarTourComponent implements OnChanges {
         console.log('Update Tour: ', tourId);
     }
 
-    deleteTour(tourId: string) {
-        console.log('Delete Tour: ', tourId);
+    deleteTour(tour: CarTour) {
+        this.removeTour.emit(tour);
     }
 }

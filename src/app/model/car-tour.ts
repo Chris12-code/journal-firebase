@@ -1,8 +1,7 @@
 import {TourShift, TourType} from "../tour-modal/tour-modal.component";
 
-export class Tour {
-
-    public type: string | null;
+export class CarTour {
+    public id?: string;
     public tourType: TourType | null;
     public tourShift: TourShift | null;
     public car: string | null;
@@ -13,7 +12,7 @@ export class Tour {
     public end: Date | null;
 
     constructor(
-        type?: string,
+        id?: string,
         tourType?: TourType,
         tourShift?: TourShift,
         car?: string,
@@ -23,7 +22,7 @@ export class Tour {
         start?: Date,
         end?: Date
     ) {
-        this.type = type != null ? type : null;
+        this.id = id != null ? id : undefined;
         this.tourType = tourType != null ? tourType : null;
         this.tourShift = tourShift != null ? tourShift : null;
         this.car = car != null ? car : null;
@@ -32,6 +31,10 @@ export class Tour {
         this.third = third != null ? third : null;
         this.start = start != null ? start : null;
         this.end = end != null ? end : null;
+    }
+
+    setId(id: string): void {
+        this.id = id;
     }
 
 }

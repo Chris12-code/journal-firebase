@@ -7,9 +7,10 @@ export class RescueOperation {
     public destinationLocation?: string | null;
 
     constructor(
-        patient?: string, rescueType?: string, rescueCategory?: string,
+        id?: string, patient?: string, rescueType?: string, rescueCategory?: string,
         operationalLocation?: string, destinationLocation?: string
     ) {
+        this.id = id;
         this.patient = patient != null ? patient : null;
         this.rescueType = rescueType != null ? rescueType : null;
         this.rescueCategory = rescueCategory != null ? rescueCategory : null;

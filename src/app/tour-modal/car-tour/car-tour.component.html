@@ -1,7 +1,7 @@
 <div class="car-tour">
     <div class="container">
         <div style="font: bold; margin-bottom: 10px">
-            Tour: {{ tourType }} - Auto: {{ car }}
+            CarTour: {{ tourType }} - Auto: {{ car }}
             <button style="float: right" (click)="newTour()" mat-button>
                 <mat-icon>add</mat-icon>
             </button>
@@ -28,7 +28,7 @@
                     <button (click)="updateTour(tour.id)">
                         <mat-icon>edit</mat-icon>
                     </button> &nbsp;
-                    <button (click)="deleteTour(tour.id)">
+                    <button (click)="deleteTour(tour)">
                         <mat-icon>delete_forever</mat-icon>
                     </button>
                 </td>

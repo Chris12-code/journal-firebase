@@ -12,8 +12,9 @@
                 [tourType]="TourType.RTW"
                 [tourShift]="TourShift.DAY"
                 [car]="'44.201'"
-                [tours]="getToursByTypeShiftAndCar('RTW', TourShift.DAY, '44.201')"
+                [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
+                (removeTour)="deleteTour($event)"
         >
         </car-tour>
         <car-tour
@@ -21,8 +22,9 @@
                 [tourType]="TourType.KTW"
                 [tourShift]="TourShift.DAY"
                 [car]="'44.301'"
-                [tours]="getToursByTypeShiftAndCar('KTW', TourShift.DAY, '44.201')"
+                [tours]="getToursByTypeShiftAndCar(TourType.KTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
+                (removeTour)="deleteTour($event)"
         >
         </car-tour>
         <car-tour
@@ -30,8 +32,9 @@
                 [tourType]="TourType.BTW"
                 [tourShift]="TourShift.DAY"
                 [car]="'20.502'"
-                [tours]="getToursByTypeShiftAndCar('BTW', TourShift.DAY, '44.201')"
+                [tours]="getToursByTypeShiftAndCar(TourType.BTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
+                (removeTour)="deleteTour($event)"
         >
         </car-tour>
     </div>
@@ -49,8 +52,9 @@
                 [tourType]="TourType.RTW"
                 [tourShift]="TourShift.NIGHT"
                 [car]="'44.201'"
-                [tours]="getToursByTypeShiftAndCar('RTW', TourShift.NIGHT, '44.201')"
+                [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.NIGHT, '44.201')"
                 (addTour)="createTour($event)"
+                (removeTour)="deleteTour($event)"
         >
         </car-tour>
     </div>

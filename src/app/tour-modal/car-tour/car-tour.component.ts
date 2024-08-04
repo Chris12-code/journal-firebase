@@ -53,8 +53,25 @@ export class CarTourComponent implements OnChanges {
             });
     }
 
-    updateTour(tourId: string) {
-        console.log('Update Tour: ', tourId);
+    updateTour(carTour: CarTour) {
+        const dialogRef = this.dialog.open(AddCarTourModalComponent, {
+            width: '270px',
+            data: {
+                tour: carTour,
+            },
+        });
+
+        dialogRef
+            .afterClosed()
+            .subscribe((result: TourDialogResult|undefined) => {
+                console.log('Data received');
+                console.log(result);
+                if(!result?.tour?.id) {
+                    console.log("Result invalid");
+                    return;
+                }
+                this.changeTour.emit(result.tour);
+            });
     }
 
     deleteTour(tour: CarTour) {

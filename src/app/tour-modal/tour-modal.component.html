@@ -15,6 +15,7 @@
                 [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
                 (removeTour)="deleteTour($event)"
+                (changeTour)="updateTour($event)"
         >
         </car-tour>
         <car-tour
@@ -25,6 +26,7 @@
                 [tours]="getToursByTypeShiftAndCar(TourType.KTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
                 (removeTour)="deleteTour($event)"
+                (changeTour)="updateTour($event)"
         >
         </car-tour>
         <car-tour
@@ -35,6 +37,7 @@
                 [tours]="getToursByTypeShiftAndCar(TourType.BTW, TourShift.DAY, '44.201')"
                 (addTour)="createTour($event)"
                 (removeTour)="deleteTour($event)"
+                (changeTour)="updateTour($event)"
         >
         </car-tour>
     </div>
@@ -55,6 +58,7 @@
                 [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.NIGHT, '44.201')"
                 (addTour)="createTour($event)"
                 (removeTour)="deleteTour($event)"
+                (changeTour)="updateTour($event)"
         >
         </car-tour>
     </div>

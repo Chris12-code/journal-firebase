@@ -55,8 +55,25 @@
                 </ngx-mat-datetime-picker>
             </mat-form-field>
 
-            <button type="button" class="btn btn-default" [disabled]="!tourForm.form.valid"
-                    (click)="newTour(); tourForm.reset()">Anlegen
+            <button
+                    *ngIf="!tour.id"
+                    type="button"
+                    class="btn btn-default"
+                    [disabled]="!tourForm.form.valid"
+                    (click)="newTour();
+                    tourForm.reset()"
+            >
+                Anlegen
+            </button>
+            <button
+                    *ngIf="tour.id"
+                    type="button"
+                    class="btn btn-default"
+                    [disabled]="!tourForm.form.valid"
+                    (click)="newTour();
+                    tourForm.reset()"
+            >
+                Aktualisieren
             </button>
         </form>
     </div>

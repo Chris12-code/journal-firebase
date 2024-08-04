@@ -24,6 +24,7 @@ export class AddCarTourModalComponent {
         public dialogRef: MatDialogRef<AddCarTourModalComponent>,
         @Inject(MAT_DIALOG_DATA) public data: TourDialogResult
     ) {
+        this.tour = { ...data.tour } as CarTour;
     }
 
     submitted = false;

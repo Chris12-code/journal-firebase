@@ -124,4 +124,32 @@ export class TourModalComponent {
                 return undefined;
         }
     }
+
+    updateTour(carTour: CarTour) {
+        console.log('Update tour');
+        console.log(carTour);
+        if (!carTour?.id) {
+            console.log("Result invalid");
+            return;
+        }
+        const docInstance = doc(this.firestore, 'car-tour', carTour.id);
+        const updatedCarTour = {
+            tourType: carTour.tourType,
+            tourShift: carTour.tourShift,
+            car: carTour.car,
+            driver: carTour.driver,
+            tpf: carTour.tpf,
+            third: carTour.third,
+            start: carTour.start,
+            end: carTour.end,
+        }
+
+        updateDoc(docInstance, updatedCarTour)
+            .then(() => {
+                console.log('data updated');
+            })
+            .catch((e) => {
+                console.log(e);
+            })
+    }
 }

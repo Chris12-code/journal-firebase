@@ -33,7 +33,7 @@
                 <ng-container matColumnDef="action">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let operation" class="action-link">
-                        <button (click)="updateRescueOperation(operation.id)">
+                        <button (click)="updateRescueOperation(operation)">
                             <mat-icon>edit</mat-icon>
                         </button> &nbsp;
                         <button (click)="deleteRescueOperation(operation)">

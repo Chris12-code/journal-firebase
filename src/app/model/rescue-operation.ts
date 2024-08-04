@@ -7,13 +7,13 @@ export class RescueOperation {
     public destinationLocation?: string | null;
 
     constructor(
-        id?: string, patient?: string, rescueType?: string, rescueCategory?: string,
+        id?: string, rescueType?: string, rescueCategory?: string, patient?: string,
         operationalLocation?: string, destinationLocation?: string
     ) {
         this.id = id;
-        this.patient = patient != null ? patient : null;
         this.rescueType = rescueType != null ? rescueType : null;
         this.rescueCategory = rescueCategory != null ? rescueCategory : null;
+        this.patient = patient != null ? patient : null;
         this.operationalLocation = operationalLocation != null ? operationalLocation : null;
         this.destinationLocation = destinationLocation != null ? destinationLocation : null;
     }

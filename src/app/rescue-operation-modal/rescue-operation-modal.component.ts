@@ -36,7 +36,13 @@ export class RescueOperationModalComponent {
                 this.rescueOperations = []
                 val.forEach(element => {
                     let temp = new RescueOperation(
-                        element['id'], element["rescueType"], element["rescueCategory"], element["patient"], element["operationalLocation"], element["destinationLocation"]);
+                        element['id'],
+                        element["rescueType"],
+                        element["rescueCategory"],
+                        element["patient"],
+                        element["operationalLocation"],
+                        element["destinationLocation"]
+                    );
                     this.rescueOperations.push(temp);
                     this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
                 })
@@ -56,10 +62,10 @@ export class RescueOperationModalComponent {
 
         dialogRef
             .afterClosed()
-            .subscribe((result: RescueOperationDialogResult|undefined) => {
+            .subscribe((result: RescueOperationDialogResult | undefined) => {
                 console.log('Data received');
                 console.log(result);
-                if(!result) {
+                if (!result) {
                     console.log("Result invalid");
                     return;
                 }
@@ -75,23 +81,44 @@ export class RescueOperationModalComponent {
             });
     }
 
-    updateRescueOperation(id: string) {
-        const docInstance = doc(this.firestore, 'rescue-operation', id);
-        const updateData = {
-            destinationLocation: 'updatedDestination'
-        }
+    updateRescueOperation(rescueOperation: RescueOperation) {
+        const dialogRef = this.dialog.open(RescueOperationDialogComponent, {
+            width: '270px',
+            data: {
+                rescueOperation: rescueOperation,
+            },
+        });
 
-        updateDoc(docInstance, updateData)
-            .then(() => {
-                console.log('data updated');
-            })
-            .catch((e) => {
-                console.log(e);
-            })
+        dialogRef
+            .afterClosed()
+            .subscribe((result: RescueOperationDialogResult | undefined) => {
+                console.log('Data received');
+                console.log(result);
+                if (!result?.rescueOperation?.id) {
+                    console.log("Result invalid");
+                    return;
+                }
+
+                const docInstance = doc(this.firestore, 'rescue-operation', result.rescueOperation.id);
+                const updateRescueOperation = {
+                    rescueType: result.rescueOperation.rescueType,
+                    rescueCategory: result.rescueOperation.rescueCategory,
+                    patient: result.rescueOperation.patient,
+                    operationalLocation: result.rescueOperation.operationalLocation,
+                    destinationLocation: 'updatedDestination',
+                }
+
+                updateDoc(docInstance, updateRescueOperation)
+                    .then(() => {
+                        console.log('data updated');
+                    })
+                    .catch((e) => {
+                        console.log(e);
+                    })
+            });
     }
 
     deleteRescueOperation(rescueOperation: RescueOperation) {
-        console.log('Delete Rescue Operation: ', rescueOperation);
         if (!rescueOperation.id) {
             return;
         }

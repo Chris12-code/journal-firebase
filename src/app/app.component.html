@@ -18,9 +18,18 @@
 </div>
 
 <ng-container *ngIf="!operationsView">
-    <tour-modal></tour-modal>
+    <tour-modal
+        [tours]="tours"
+        (tourAdded)="createTour($event)"
+        (tourDeleted)="deleteTour($event)"
+        (tourChanged)="updateTour($event)"
+    >
+    </tour-modal>
 </ng-container>
 
 <ng-container *ngIf="operationsView">
-    <rescue-operation-modal></rescue-operation-modal>
+    <rescue-operation-modal
+        [tours]="tours"
+    >
+    </rescue-operation-modal>
 </ng-container>

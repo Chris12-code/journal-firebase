@@ -32,6 +32,7 @@ import {TourModalComponent} from "./tour-modal/tour-modal.component";
 import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-operation-modal.component";
 import {CarTourComponent} from "./tour-modal/car-tour/car-tour.component";
 import {MatGridListModule} from "@angular/material/grid-list";
+import {MatAutocompleteModule} from "@angular/material/autocomplete";
 
 @NgModule({
     declarations: [
@@ -72,7 +73,9 @@ import {MatGridListModule} from "@angular/material/grid-list";
         MatCheckboxModule,
         MatNativeDateModule,
         NgxMatNativeDateModule,
-        MatGridListModule
+        MatGridListModule,
+        MatAutocompleteModule,
+        ReactiveFormsModule,
     ],
     providers: [MatDatepickerModule, MatNativeDateModule],
     bootstrap: [AppComponent]

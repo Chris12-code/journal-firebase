@@ -1,13 +1,14 @@
 import {TourShift, TourType} from "../tour-modal/tour-modal.component";
+import {Person} from "./person";
 
 export class CarTour {
     public id?: string;
     public tourType: TourType | null;
     public tourShift: TourShift | null;
     public car: string | null;
-    public driver: string | null;
-    public tpf: string | null;
-    public third: string | null;
+    public driver: Person | null;
+    public tpf: Person | null;
+    public third: Person | null;
     public start: Date | null;
     public end: Date | null;
 
@@ -16,9 +17,9 @@ export class CarTour {
         tourType?: TourType,
         tourShift?: TourShift,
         car?: string,
-        driver?: string,
-        tpf?: string,
-        third?: string,
+        driver?: Person,
+        tpf?: Person,
+        third?: Person,
         start?: Date,
         end?: Date
     ) {

@@ -57,6 +57,19 @@
                        minlength="3">
             </div>
 
+            <div class="form-group">
+                <label for="tour">Tour</label>
+                <input type="text" class="form-control" id="tour"
+                       [formControl]="tourControl"
+                       [matAutocomplete]="autoTour"
+                       minlength="3">
+                <mat-autocomplete #autoTour="matAutocomplete" [displayWith]="displayTour">
+                    <mat-option *ngFor="let tour of filteredTours | async" [value]="tour">
+                        {{ tour.car }} - {{ tour.driver?.name }} - {{ tour.tpf?.name }} - {{ tour.third?.name }}
+                    </mat-option>
+                </mat-autocomplete>
+            </div>
+
             <button
                     *ngIf="!rescueOperation.id"
                     type="button"

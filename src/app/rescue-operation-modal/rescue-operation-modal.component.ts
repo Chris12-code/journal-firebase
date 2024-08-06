@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {
     RescueOperationDialogComponent,
     RescueOperationDialogResult
@@ -8,6 +8,7 @@ import {MatTableDataSource} from "@angular/material/table";
 import {RescueOperation} from "../model/rescue-operation";
 import {MatDialog} from "@angular/material/dialog";
 import {Observable} from "rxjs";
+import {CarTour} from "../model/car-tour";
 
 @Component({
     selector: 'rescue-operation-modal',
@@ -16,11 +17,13 @@ import {Observable} from "rxjs";
 })
 export class RescueOperationModalComponent {
 
+    @Input() tours!: CarTour[]
+
     dataSourceRescueOperations: MatTableDataSource<RescueOperation>;
     rescueOperations: RescueOperation[] = [];
     operations!: Observable<any>;
     displayedColumnsRescueOperations: string[] = ['rescueType', 'rescueCategory', 'patient',
-        'operationalLocation', 'destinationLocation', 'action'
+        'operationalLocation', 'destinationLocation', 'tour', 'action'
     ];
 
     constructor(private dialog: MatDialog, private firestore: Firestore) {
@@ -32,8 +35,11 @@ export class RescueOperationModalComponent {
         const collectionInstance = collection(this.firestore, 'rescue-operation');
         collectionData(collectionInstance, { idField: 'id' })
             .subscribe(val => {
-                console.log(val);
-                this.rescueOperations = []
+                this.rescueOperations = [];
+                if (val.length === 0) {
+                    this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
+                    return
+                }
                 val.forEach(element => {
                     let temp = new RescueOperation(
                         element['id'],
@@ -41,12 +47,12 @@ export class RescueOperationModalComponent {
                         element["rescueCategory"],
                         element["patient"],
                         element["operationalLocation"],
-                        element["destinationLocation"]
+                        element["destinationLocation"],
+                        element["tour"],
                     );
                     this.rescueOperations.push(temp);
                     this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
                 })
-                console.log(this.rescueOperations)
             });
 
         this.operations = collectionData(collectionInstance, { idField: 'id' });
@@ -57,6 +63,7 @@ export class RescueOperationModalComponent {
             width: '270px',
             data: {
                 rescueOperation: {},
+                tours: this.tours,
             },
         });
 
@@ -65,13 +72,31 @@ export class RescueOperationModalComponent {
             .subscribe((result: RescueOperationDialogResult | undefined) => {
                 console.log('Data received');
                 console.log(result);
-                if (!result) {
+                if (!result?.rescueOperation) {
                     console.log("Result invalid");
                     return;
                 }
+
+                const plainRescueOperation = {
+                    ...result.rescueOperation,
+                    tour: result.rescueOperation.tour ?
+                        {
+                            id: result.rescueOperation.tour.id,
+                            tourType: result.rescueOperation.tour.tourType,
+                            tourShift: result.rescueOperation.tour.tourShift,
+                            car: result.rescueOperation.tour.car,
+                            driver: result.rescueOperation.tour.driver ? { number: result.rescueOperation.tour.driver.number, name: result.rescueOperation.tour.driver.name, telephone: result.rescueOperation.tour.driver.telephone, email: result.rescueOperation.tour.driver.email } : null,
+                            tpf: result.rescueOperation.tour.tpf ? { number: result.rescueOperation.tour.tpf.number, name: result.rescueOperation.tour.tpf.name, telephone: result.rescueOperation.tour.tpf.telephone, email: result.rescueOperation.tour.tpf.email } : null,
+                            third: result.rescueOperation.tour.third ? { number: result.rescueOperation.tour.third.number, name: result.rescueOperation.tour.third.name, telephone: result.rescueOperation.tour.third.telephone, email: result.rescueOperation.tour.third.email } : null,
+                            start: result.rescueOperation.tour.start,
+                            end: result.rescueOperation.tour.end
+                        }
+                        : null,
+                };
+
                 this.rescueOperations.push(result.rescueOperation);
                 const collectionInstance = collection(this.firestore, 'rescue-operation');
-                addDoc(collectionInstance, result.rescueOperation).then(() => {
+                addDoc(collectionInstance, plainRescueOperation).then(() => {
                     console.log('Data saved successfully');
                 })
                     .catch((e) => {
@@ -86,14 +111,13 @@ export class RescueOperationModalComponent {
             width: '270px',
             data: {
                 rescueOperation: rescueOperation,
+                tours: this.tours,
             },
         });
 
         dialogRef
             .afterClosed()
             .subscribe((result: RescueOperationDialogResult | undefined) => {
-                console.log('Data received');
-                console.log(result);
                 if (!result?.rescueOperation?.id) {
                     console.log("Result invalid");
                     return;
@@ -106,9 +130,28 @@ export class RescueOperationModalComponent {
                     patient: result.rescueOperation.patient,
                     operationalLocation: result.rescueOperation.operationalLocation,
                     destinationLocation: result.rescueOperation.destinationLocation,
+                    tour: result.rescueOperation.tour,
                 }
 
-                updateDoc(docInstance, updateRescueOperation)
+
+                const plainRescueOperation = {
+                    ...updateRescueOperation,
+                    tour: result.rescueOperation.tour ?
+                        {
+                            id: result.rescueOperation.tour.id,
+                            tourType: result.rescueOperation.tour.tourType,
+                            tourShift: result.rescueOperation.tour.tourShift,
+                            car: result.rescueOperation.tour.car,
+                            driver: result.rescueOperation.tour.driver ? { number: result.rescueOperation.tour.driver.number, name: result.rescueOperation.tour.driver.name, telephone: result.rescueOperation.tour.driver.telephone, email: result.rescueOperation.tour.driver.email } : null,
+                            tpf: result.rescueOperation.tour.tpf ? { number: result.rescueOperation.tour.tpf.number, name: result.rescueOperation.tour.tpf.name, telephone: result.rescueOperation.tour.tpf.telephone, email: result.rescueOperation.tour.tpf.email } : null,
+                            third: result.rescueOperation.tour.third ? { number: result.rescueOperation.tour.third.number, name: result.rescueOperation.tour.third.name, telephone: result.rescueOperation.tour.third.telephone, email: result.rescueOperation.tour.third.email } : null,
+                            start: result.rescueOperation.tour.start,
+                            end: result.rescueOperation.tour.end
+                        }
+                        : null,
+                };
+
+                updateDoc(docInstance, plainRescueOperation)
                     .then(() => {
                         console.log('data updated');
                     })

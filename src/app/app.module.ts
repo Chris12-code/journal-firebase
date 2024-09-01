@@ -33,6 +33,7 @@ import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-ope
 import {CarTourComponent} from "./tour-modal/car-tour/car-tour.component";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatAutocompleteModule} from "@angular/material/autocomplete";
+import {getAuth, provideAuth} from "@angular/fire/auth";
 
 @NgModule({
     declarations: [
@@ -56,6 +57,7 @@ import {MatAutocompleteModule} from "@angular/material/autocomplete";
         MatIconModule,
         MatTableModule,
         provideFirebaseApp(() => initializeApp(environment.firebase)),
+        provideAuth(() => getAuth()),
         provideFirestore(() => getFirestore()),
         NgxMatDatetimePickerModule,
         MatInputModule,

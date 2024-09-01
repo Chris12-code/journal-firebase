@@ -1,9 +1,20 @@
 <mat-toolbar>
     <img width="20%" src="./assets/logo_start.png">
     <span>RK Strobl Journalblatt</span>
+    <span style="flex: 1 1 auto;"></span>
+    <button class="auth-buttons" *ngIf="user === null" (click)="login()">
+        <mat-icon>login</mat-icon>
+    </button>
+    <button class="auth-buttons" *ngIf="user != null" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+    </button>
 </mat-toolbar>
 
-<div class="content-wrapper">
+<div *ngIf="user === null">
+    <p>Aktuell ist kein Benutzer angemeldet!</p>
+</div>
+
+<div *ngIf="user !== null" class="content-wrapper">
 
     <button [hidden]="operationsView" (click)="activateOperationsView()" mat-button>
         <mat-icon>subject</mat-icon>
@@ -17,7 +28,7 @@
 
 </div>
 
-<ng-container *ngIf="!operationsView">
+<ng-container *ngIf="!operationsView && user !== null">
     <tour-modal
         [tours]="tours"
         (tourAdded)="createTour($event)"
@@ -27,7 +38,7 @@
     </tour-modal>
 </ng-container>
 
-<ng-container *ngIf="operationsView">
+<ng-container *ngIf="operationsView && user !== null">
     <rescue-operation-modal
         [tours]="tours"
     >

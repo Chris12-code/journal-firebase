@@ -1,7 +1,7 @@
 .mat-toolbar {
     background-color: #9f9f9f; /* You can set your desired background color */
     color: #ffffff; /* You can set your desired text color */
-    padding: 0px;
+    padding: 0;
     display: flex;
     align-items: center;
     margin-bottom: 10px;
@@ -21,4 +21,9 @@
 
 .operationsView {
     margin-top: 10px;
+}
+
+.auth-buttons {
+    background-color: inherit;
+    border: none;
 }

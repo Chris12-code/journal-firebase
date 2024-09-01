@@ -1,14 +1,18 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {CarTour} from "./model/car-tour";
 import {addDoc, collection, collectionData, deleteDoc, doc, Firestore, updateDoc} from "@angular/fire/firestore";
 import {TourType} from "./tour-modal/tour-modal.component";
+import {LoginComponent, LoginDialogResult} from "./auth/login-modal.component";
+import {MatDialog} from "@angular/material/dialog";
+import {AuthService} from "./lib/auth.service";
+import { User } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   title = 'journal-firebase';
 
   tours: CarTour[] = [];
@@ -16,8 +20,17 @@ export class AppComponent {
   teamView = false;
   operationsView = true;
 
-  constructor(private firestore: Firestore) {
-    this.getTours();
+  user: User | null = null;
+
+  constructor(private firestore: Firestore, private dialog: MatDialog, private authService: AuthService) {}
+
+  ngOnInit() {
+    this.authService.user$.subscribe(user => {
+      this.user = user;
+      if (user) {
+          this.getTours();
+      }
+    });
   }
 
   getTours(): CarTour[] {
@@ -129,5 +142,36 @@ export class AppComponent {
   activateOperationsView(): void {
     this.teamView = false;
     this.operationsView = true;
+  }
+
+  login() {
+    const dialogRef = this.dialog.open(LoginComponent, {
+      width: '300px',
+      data: {
+        userCredential: null,
+      }
+    });
+
+    dialogRef
+        .afterClosed()
+        .subscribe((result: LoginDialogResult | undefined) => {
+          if (!result?.userCredential) {
+            console.log("Login failed");
+            return;
+          }
+
+          this.user = result.userCredential.user;
+        });
+  }
+
+  logout() {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.user = null;
+      },
+      error: (err) => {
+        console.error('Logout error:', err);
+      }
+    });
   }
 }

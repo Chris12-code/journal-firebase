@@ -15,6 +15,10 @@ Some great sources to get informed:
 * ng build
 * firebase deploy
 
+## Authentication
+
+The user can be managed under: https://console.firebase.google.com/project/rk-strobl-journalblatt/authentication/users?hl=de
+
 # Test
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.8.

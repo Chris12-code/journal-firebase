@@ -15,9 +15,15 @@ Some great sources to get informed:
 * ng build
 * firebase deploy
 
+Troubleshooting: If the deployment does not work try firebase login or firebase logout and firebase login again. 
+
 ## Authentication
 
 The user can be managed under: https://console.firebase.google.com/project/rk-strobl-journalblatt/authentication/users?hl=de
+
+## Monitor the app usage and potential costs
+
+https://console.firebase.google.com/project/rk-strobl-journalblatt/usage?hl=de
 
 # Test
 

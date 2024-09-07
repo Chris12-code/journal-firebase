@@ -1,5 +1,25 @@
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.date-picker {
+    width: -webkit-fill-available;
+}
+
 .form-control {
-    width: 100%;
+    width: -webkit-fill-available;
     padding: 8px;
     font-size: 16px;
     border: 1px solid #ccc;

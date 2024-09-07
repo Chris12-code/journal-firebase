@@ -31,7 +31,7 @@
                 </ng-container>
                 <ng-container matColumnDef="tour">
                     <th mat-header-cell *matHeaderCellDef> Tour</th>
-                    <td mat-cell *matCellDef="let operation"> {{ operation.tour?.car }}</td>
+                    <td mat-cell *matCellDef="let operation">{{ displayTour(operation) }}</td>
                 </ng-container>
                 <!-- Action Column -->
                 <ng-container matColumnDef="action">

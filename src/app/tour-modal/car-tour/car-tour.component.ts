@@ -33,7 +33,7 @@ export class CarTourComponent implements OnChanges {
 
     newTour(): void {
         const dialogRef = this.dialog.open(AddCarTourModalComponent, {
-            width: '270px',
+            width: '320px',
             data: {
                 tour: {},
             },
@@ -55,7 +55,7 @@ export class CarTourComponent implements OnChanges {
 
     updateTour(carTour: CarTour) {
         const dialogRef = this.dialog.open(AddCarTourModalComponent, {
-            width: '270px',
+            width: '320px',
             data: {
                 tour: carTour,
             },

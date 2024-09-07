@@ -76,6 +76,7 @@ export class RescueOperationDialogComponent implements OnInit{
     this.data.rescueOperation.operationalLocation = this.rescueOperation.operationalLocation;
     this.data.rescueOperation.destinationLocation = this.rescueOperation.destinationLocation;
     this.data.rescueOperation.tour = this.getTour(this.tourControl.value);
+    this.data.rescueOperation.timeStamp = new Date();
     this.dialogRef.close(this.data);
   }
 
@@ -87,6 +88,7 @@ export class RescueOperationDialogComponent implements OnInit{
     this.data.rescueOperation.operationalLocation = this.rescueOperation.operationalLocation;
     this.data.rescueOperation.destinationLocation = this.rescueOperation.destinationLocation;
     this.data.rescueOperation.tour = this.getTour(this.tourControl.value);
+    this.data.rescueOperation.timeStamp = this.rescueOperation.timeStamp;
     this.dialogRef.close(this.data);
   }
 

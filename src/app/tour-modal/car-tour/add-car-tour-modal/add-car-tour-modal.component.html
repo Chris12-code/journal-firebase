@@ -55,7 +55,7 @@
                 </mat-autocomplete>
             </div>
 
-            <mat-form-field>
+            <mat-form-field class="date-picker">
                 <input matInput [ngxMatDatetimePicker]="pickerStart" placeholder="Dienststart">
                 <mat-datepicker-toggle matSuffix [for]="$any(pickerStart)"></mat-datepicker-toggle>
                 <ngx-mat-datetime-picker #pickerStart [showSpinners]="true" [showSeconds]="false"
@@ -64,7 +64,7 @@
                 </ngx-mat-datetime-picker>
             </mat-form-field>
 
-            <mat-form-field>
+            <mat-form-field class="date-picker">
                 <input matInput [ngxMatDatetimePicker]="pickerEnd" placeholder="Dienstende">
                 <mat-datepicker-toggle matSuffix [for]="$any(pickerEnd)"></mat-datepicker-toggle>
                 <ngx-mat-datetime-picker #pickerEnd [showSpinners]="true" [showSeconds]="false"

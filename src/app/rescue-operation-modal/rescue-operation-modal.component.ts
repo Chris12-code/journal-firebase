@@ -3,7 +3,17 @@ import {
     RescueOperationDialogComponent,
     RescueOperationDialogResult
 } from "./rescue-operation-dialog/rescue-operation-dialog.component";
-import {addDoc, collection, collectionData, deleteDoc, doc, Firestore, updateDoc} from "@angular/fire/firestore";
+import {
+    addDoc,
+    collection,
+    collectionData,
+    deleteDoc,
+    doc,
+    Firestore,
+    query,
+    updateDoc,
+    where
+} from "@angular/fire/firestore";
 import {MatTableDataSource} from "@angular/material/table";
 import {RescueOperation} from "../model/rescue-operation";
 import {MatDialog} from "@angular/material/dialog";
@@ -27,8 +37,41 @@ export class RescueOperationModalComponent {
     ];
 
     constructor(private dialog: MatDialog, private firestore: Firestore) {
-        this.getRescueOperations();
+        this.getRescueOperationsFromLastDay();
         this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
+    }
+
+    getRescueOperationsFromLastDay(lastNDays: number = 1) {
+        const now = new Date();
+        const hoursAgo = new Date(now.getTime() - lastNDays * 24 * 60 * 60 * 1000);
+
+        const collectionInstance = collection(this.firestore, 'rescue-operation');
+        const q = query(collectionInstance, where('timeStamp', '>=', hoursAgo));
+
+        collectionData(q, { idField: 'id' })
+            .subscribe(val => {
+                this.rescueOperations = [];
+                if (val.length === 0) {
+                    this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
+                    return;
+                }
+                val.forEach(element => {
+                    let temp = new RescueOperation(
+                        element['id'],
+                        element["rescueType"],
+                        element["rescueCategory"],
+                        element["patient"],
+                        element["operationalLocation"],
+                        element["destinationLocation"],
+                        element["tour"],
+                        element["timeStamp"],
+                    );
+                    this.rescueOperations.push(temp);
+                    this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
+                });
+            });
+
+        this.operations = collectionData(q, { idField: 'id' });
     }
 
     getRescueOperations() {
@@ -49,6 +92,7 @@ export class RescueOperationModalComponent {
                         element["operationalLocation"],
                         element["destinationLocation"],
                         element["tour"],
+                        element["timeStamp"],
                     );
                     this.rescueOperations.push(temp);
                     this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
@@ -60,7 +104,7 @@ export class RescueOperationModalComponent {
 
     newRescueOperation(): void {
         const dialogRef = this.dialog.open(RescueOperationDialogComponent, {
-            width: '270px',
+            width: '320px',
             data: {
                 rescueOperation: {},
                 tours: this.tours,
@@ -70,10 +114,8 @@ export class RescueOperationModalComponent {
         dialogRef
             .afterClosed()
             .subscribe((result: RescueOperationDialogResult | undefined) => {
-                console.log('Data received');
-                console.log(result);
                 if (!result?.rescueOperation) {
-                    console.log("Result invalid");
+                    console.log("Failed to create new rescue operation");
                     return;
                 }
 
@@ -108,7 +150,7 @@ export class RescueOperationModalComponent {
 
     updateRescueOperation(rescueOperation: RescueOperation) {
         const dialogRef = this.dialog.open(RescueOperationDialogComponent, {
-            width: '270px',
+            width: '320px',
             data: {
                 rescueOperation: rescueOperation,
                 tours: this.tours,
@@ -173,5 +215,9 @@ export class RescueOperationModalComponent {
             .catch((e) => {
                 console.log(e);
             })
+    }
+
+    displayTour(operation: RescueOperation): string {
+        return operation?.tour?.car ? operation.tour.car : '';
     }
 }

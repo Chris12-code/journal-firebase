@@ -1,11 +1,11 @@
-import { Component, Inject, OnInit, ViewChild } from '@angular/core';
-import { CarTour } from "../../../model/car-tour";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
-import { TourShift, TourType } from "../../tour-modal.component";
-import { Person } from "../../../model/person";
-import { PersonUtilsService } from "../../../lib/person-utils.service";
-import { FormControl } from "@angular/forms";
-import { map, Observable, startWith } from "rxjs";
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
+import {CarTour} from "../../../model/car-tour";
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {TourShift, TourType} from "../../tour-modal.component";
+import {Person} from "../../../model/person";
+import {PersonUtilsService} from "../../../lib/person-utils.service";
+import {FormControl} from "@angular/forms";
+import {map, Observable, startWith} from "rxjs";
 
 export interface TourDialogResult {
     tour: CarTour;
@@ -27,10 +27,12 @@ export class AddCarTourModalComponent implements OnInit {
     persons: Person[];
 
     driverControl = new FormControl();
+    carControl = new FormControl();
     tpfControl = new FormControl();
     thirdControl = new FormControl();
 
     filteredDrivers!: Observable<Person[]>;
+    filteredCars!: Observable<string[]>;
     filteredTpf!: Observable<Person[]>;
     filteredThird!: Observable<Person[]>;
 
@@ -48,6 +50,10 @@ export class AddCarTourModalComponent implements OnInit {
             this.driverControl.setValue(this.tour.driver.number);
         }
 
+        if (this.tour.car) {
+            this.carControl.setValue(this.tour.car);
+        }
+
         if (this.tour.tpf) {
             this.tpfControl.setValue(this.tour.tpf.number);
         }
@@ -59,6 +65,11 @@ export class AddCarTourModalComponent implements OnInit {
         this.filteredDrivers = this.driverControl.valueChanges.pipe(
             startWith(''),
             map(value => this._filterPersons(value, 'driver')),
+        );
+
+        this.filteredCars = this.carControl.valueChanges.pipe(
+            startWith(''),
+            map(value => this._filterCars(value)),
         );
 
         this.filteredTpf = this.tpfControl.valueChanges.pipe(
@@ -128,6 +139,13 @@ export class AddCarTourModalComponent implements OnInit {
         return false;
     }
 
+    private _filterCars(value: string): string[] {
+        const filterValue = value.toLowerCase();
+        const allCars = [ '44.201', '44.301', '80.103' ];
+        return allCars
+            .filter(car => car.toLowerCase().includes(filterValue) && car !== this.carControl.value);
+    }
+
     submitted = false;
 
     onSubmit() {
@@ -135,12 +153,16 @@ export class AddCarTourModalComponent implements OnInit {
     }
 
     newTour() {
+        console.log('Picker start', this.pickerStart);
         this.data.tour.tourType = this.tour.tourType;
         this.data.tour.tourShift = TourShift.DAY;
-        this.data.tour.car = '44.201';
+        this.data.tour.car = this.carControl.value;
         this.data.tour.driver = this.getPerson(this.driverControl.value);
         this.data.tour.tpf = this.getPerson(this.tpfControl.value);
         this.data.tour.third = this.getPerson(this.thirdControl.value);
+        this.data.tour.start = this.pickerStart._selected;
+        this.data.tour.end = this.pickerEnd._selected;
+        console.log('set values', this.data);
         this.dialogRef.close(this.data);
     }
 

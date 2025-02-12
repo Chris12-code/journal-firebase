@@ -17,6 +17,19 @@
             </div>
 
             <div class="form-group">
+                <label for="car">Auto</label>
+                <input type="text" class="form-control" id="car"
+                       [formControl]="carControl"
+                       [matAutocomplete]="car"
+                       minlength="6">
+                <mat-autocomplete #car="matAutocomplete">
+                    <mat-option *ngFor="let car of filteredCars | async" [value]="car">
+                        {{ car }}
+                    </mat-option>
+                </mat-autocomplete>
+            </div>
+
+            <div class="form-group">
                 <label for="driver">Fahrer</label>
                 <input type="text" class="form-control" id="driver"
                        [formControl]="driverControl"
@@ -55,6 +68,7 @@
                 </mat-autocomplete>
             </div>
 
+            <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
             <mat-form-field class="date-picker">
                 <input matInput [ngxMatDatetimePicker]="pickerStart" placeholder="Dienststart">
                 <mat-datepicker-toggle matSuffix [for]="$any(pickerStart)"></mat-datepicker-toggle>

@@ -46,14 +46,18 @@ export class AppComponent implements OnInit{
                 element["car"] != null ? element["car"] : null,
                 element["driver"],
                 element["tpf"] != null ? element["tpf"] : null,
-                element["third"] != null ? element["third"] : null
+                element["third"] != null ? element["third"] : null,
+                element["start"] != null ? element["start"] : null,
+                element["end"] != null ? element["end"] : null
             );
-            this.tours.push(temp);
+            // only get tours that have a start data not longer ago than 20 hours
+            if (temp.start && temp.start.getTime() > Date.now() - 20 * 60 * 60 * 1000) {
+              this.tours.push(temp);
+            }
             //this.dataSourceTours = new MatTableDataSource(this.tours);
           })
         });
 
-    console.log('Tours: ', this.tours);
     return this.tours;
   }
 

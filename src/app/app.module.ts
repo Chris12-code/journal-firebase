@@ -18,11 +18,6 @@ import {provideFirestore, getFirestore} from '@angular/fire/firestore';
 import {initializeApp} from 'firebase/app';
 import {provideFirebaseApp} from '@angular/fire/app';
 import {AddCarTourModalComponent} from './tour-modal/car-tour/add-car-tour-modal/add-car-tour-modal.component';
-import {
-    NgxMatDatetimePickerModule,
-    NgxMatNativeDateModule,
-    NgxMatTimepickerModule
-} from '@angular-material-components/datetime-picker';
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatRadioModule} from "@angular/material/radio";
 import {MatSelectModule} from "@angular/material/select";
@@ -59,14 +54,11 @@ import {getAuth, provideAuth} from "@angular/fire/auth";
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideFirestore(() => getFirestore()),
-        NgxMatDatetimePickerModule,
         MatInputModule,
         BrowserModule,
         BrowserAnimationsModule,
         MatDatepickerModule,
         MatInputModule,
-        NgxMatDatetimePickerModule,
-        NgxMatTimepickerModule,
         FormsModule,
         ReactiveFormsModule,
         MatButtonModule,
@@ -74,7 +66,6 @@ import {getAuth, provideAuth} from "@angular/fire/auth";
         MatSelectModule,
         MatCheckboxModule,
         MatNativeDateModule,
-        NgxMatNativeDateModule,
         MatGridListModule,
         MatAutocompleteModule,
         ReactiveFormsModule,

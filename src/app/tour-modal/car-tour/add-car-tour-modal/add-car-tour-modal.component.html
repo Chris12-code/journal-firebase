@@ -69,6 +69,17 @@
             </div>
 
             <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
+            <mat-form-field class="date-picker">
+                <input matInput [matDatepicker]="pickerStart" placeholder="Dienststart" [(ngModel)]="tour.start" [formControl]="startControl">
+                <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
+                <mat-datepicker #pickerStart></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field class="date-picker">
+                <input matInput [matDatepicker]="pickerEnd" placeholder="Dienstende" [(ngModel)]="tour.end" [formControl]="endControl">
+                <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+                <mat-datepicker #pickerEnd></mat-datepicker>
+            </mat-form-field>
 
             <button
                     *ngIf="!tour.id"

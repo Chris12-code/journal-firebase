@@ -31,6 +31,9 @@ export class AddCarTourModalComponent implements OnInit {
     tpfControl = new FormControl();
     thirdControl = new FormControl();
 
+    startControl = new FormControl();
+    endControl = new FormControl();
+
     filteredDrivers!: Observable<Person[]>;
     filteredCars!: Observable<string[]>;
     filteredTpf!: Observable<Person[]>;
@@ -60,6 +63,14 @@ export class AddCarTourModalComponent implements OnInit {
 
         if (this.tour.third) {
             this.thirdControl.setValue(this.tour.third.number);
+        }
+
+        if (this.tour.start) {
+            this.startControl.setValue(this.tour.start);
+        }
+
+        if (this.tour.end) {
+            this.endControl.setValue(this.tour.end);
         }
 
         this.filteredDrivers = this.driverControl.valueChanges.pipe(
@@ -153,15 +164,15 @@ export class AddCarTourModalComponent implements OnInit {
     }
 
     newTour() {
-        console.log('Picker start', this.pickerStart);
+        console.log('Picker start', this.startControl.value);
         this.data.tour.tourType = this.tour.tourType;
         this.data.tour.tourShift = TourShift.DAY;
         this.data.tour.car = this.carControl.value;
         this.data.tour.driver = this.getPerson(this.driverControl.value);
         this.data.tour.tpf = this.getPerson(this.tpfControl.value);
         this.data.tour.third = this.getPerson(this.thirdControl.value);
-        this.data.tour.start = this.pickerStart._selected;
-        this.data.tour.end = this.pickerEnd._selected;
+        this.data.tour.start = this.startControl.value;
+        this.data.tour.end = this.endControl.value;
         console.log('set values', this.data);
         this.dialogRef.close(this.data);
     }

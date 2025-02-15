@@ -27,6 +27,7 @@ export class CarTourComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges) {
         if(changes['tours']) {
+            console.log('Tours changed', this.tours);
             this.dataSourceTours = new MatTableDataSource<CarTour>(this.tours);
         }
     }

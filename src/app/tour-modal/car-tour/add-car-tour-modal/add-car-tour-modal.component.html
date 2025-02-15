@@ -17,6 +17,19 @@
             </div>
 
             <div class="form-group">
+                <label for="car">Auto</label>
+                <input type="text" class="form-control" id="car"
+                       [formControl]="carControl"
+                       [matAutocomplete]="car"
+                       minlength="6">
+                <mat-autocomplete #car="matAutocomplete">
+                    <mat-option *ngFor="let car of filteredCars | async" [value]="car">
+                        {{ car }}
+                    </mat-option>
+                </mat-autocomplete>
+            </div>
+
+            <div class="form-group">
                 <label for="driver">Fahrer</label>
                 <input type="text" class="form-control" id="driver"
                        [formControl]="driverControl"
@@ -55,22 +68,17 @@
                 </mat-autocomplete>
             </div>
 
+            <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
             <mat-form-field class="date-picker">
-                <input matInput [ngxMatDatetimePicker]="pickerStart" placeholder="Dienststart">
-                <mat-datepicker-toggle matSuffix [for]="$any(pickerStart)"></mat-datepicker-toggle>
-                <ngx-mat-datetime-picker #pickerStart [showSpinners]="true" [showSeconds]="false"
-                                         [stepHour]="1" [stepMinute]="5" [stepSecond]="60"
-                                         [disableMinute]="true">
-                </ngx-mat-datetime-picker>
+                <input matInput [matDatepicker]="pickerStart" placeholder="Dienststart" [(ngModel)]="tour.start" [formControl]="startControl">
+                <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
+                <mat-datepicker #pickerStart></mat-datepicker>
             </mat-form-field>
 
             <mat-form-field class="date-picker">
-                <input matInput [ngxMatDatetimePicker]="pickerEnd" placeholder="Dienstende">
-                <mat-datepicker-toggle matSuffix [for]="$any(pickerEnd)"></mat-datepicker-toggle>
-                <ngx-mat-datetime-picker #pickerEnd [showSpinners]="true" [showSeconds]="false"
-                                         [stepHour]="1" [stepMinute]="5" [stepSecond]="60"
-                                         [disableMinute]="true">
-                </ngx-mat-datetime-picker>
+                <input matInput [matDatepicker]="pickerEnd" placeholder="Dienstende" [(ngModel)]="tour.end" [formControl]="endControl">
+                <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+                <mat-datepicker #pickerEnd></mat-datepicker>
             </mat-form-field>
 
             <button

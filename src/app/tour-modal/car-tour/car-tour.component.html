@@ -2,9 +2,6 @@
     <div class="container">
         <div style="font: bold; margin-bottom: 10px">
             {{ tourType }} - Auto: {{ car }}
-            <button style="float: right" (click)="newTour()" mat-button>
-                <mat-icon>add</mat-icon>
-            </button>
         </div>
         <table mat-table [dataSource]="dataSourceTours" class="mat-elevation-z8">
             <tr mat-header-row *matHeaderRowDef="displayedColumnsTours"></tr>
@@ -34,5 +31,10 @@
                 </td>
             </ng-container>
         </table>
+        <div style="display: flex; justify-content: center; margin-bottom: 10px">
+            <button (click)="newTour()" mat-button>
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
     </div>
 </div>

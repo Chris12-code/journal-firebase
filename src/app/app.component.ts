@@ -46,14 +46,21 @@ export class AppComponent implements OnInit{
                 element["car"] != null ? element["car"] : null,
                 element["driver"],
                 element["tpf"] != null ? element["tpf"] : null,
-                element["third"] != null ? element["third"] : null
+                element["third"] != null ? element["third"] : null,
+                element["start"] != null ? element["start"] : null,
+                element["end"] != null ? element["end"] : null
             );
-            this.tours.push(temp);
+
+            // TODO: change to 20 hours once the time picker is implemented
+            // only get tours that have a start data not longer ago than 20 hours
+            const tourStart = new Date(element["start"].seconds * 1000);
+            if (temp.start && tourStart.getTime() > Date.now() - 30 * 60 * 60 * 1000) {
+              this.tours.push(temp);
+            }
             //this.dataSourceTours = new MatTableDataSource(this.tours);
           })
         });
 
-    console.log('Tours: ', this.tours);
     return this.tours;
   }
 

@@ -1,6 +1,8 @@
 import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
 import {MatTableDataSource} from "@angular/material/table";
 import {CarTour} from "../model/car-tour";
+import {AddCarTourModalComponent, TourDialogResult} from "./car-tour/add-car-tour-modal/add-car-tour-modal.component";
+import {MatDialog} from "@angular/material/dialog";
 
 export enum TourType {
     RTW = 'RTW',
@@ -31,7 +33,7 @@ export class TourModalComponent implements OnChanges{
     expandDayShift = false;
     expandNightShift = false;
 
-    constructor() {
+    constructor(private dialog: MatDialog) {
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -63,5 +65,39 @@ export class TourModalComponent implements OnChanges{
 
     toggleExpansionNightShift() {
         this.expandNightShift = !this.expandNightShift;
+    }
+
+    getCarNumbers(): string[] {
+        const carNumbers: string[] = [];
+        this.tours.forEach(tour => {
+            if (tour.car && !carNumbers.includes(tour.car)) {
+                carNumbers.push(tour.car);
+            }
+        });
+
+        return carNumbers;
+    }
+
+    newTour(): void {
+        const dialogRef = this.dialog.open(AddCarTourModalComponent, {
+            width: '320px',
+            data: {
+                tour: {},
+            },
+        });
+
+        dialogRef
+        .afterClosed()
+            .subscribe((result: TourDialogResult|undefined) => {
+                console.log('Data received');
+                console.log(result);
+                if(!result) {
+                    console.log("Result invalid");
+                    return;
+                }
+
+                //this.addTour.emit(result.tour);
+                this.tourAdded.emit(result.tour);
+            });
     }
 }

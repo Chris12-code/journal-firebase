@@ -72,7 +72,7 @@
         <mat-autocomplete #autoTour="matAutocomplete" [displayWith]="displayTour">
           @for (tour of filteredTours | async; track tour) {
             <mat-option [value]="tour">
-              {{ tour.car }} - {{ tour.driver?.name }} - {{ tour.tpf?.name }} - {{ tour.third?.name }}
+              {{ tour.tourShift === 'DAY' ? 'Tag' : 'Nacht' }} - {{ tour.car }} - {{ tour.driver?.name }} - {{ tour.tpf?.name }} - {{ tour.third?.name }}
             </mat-option>
           }
         </mat-autocomplete>

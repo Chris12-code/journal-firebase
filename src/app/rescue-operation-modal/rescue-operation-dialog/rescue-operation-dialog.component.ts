@@ -98,6 +98,8 @@ export class RescueOperationDialogComponent implements OnInit{
   }
 
   displayTour(tour: CarTour): string {
-    return tour?.car ?? '';
+    if (!tour?.car) return '';
+    const shift = tour.tourShift === 'DAY' ? 'Tag' : 'Nacht';
+    return `${shift} - ${tour.car}`;
   }
 }

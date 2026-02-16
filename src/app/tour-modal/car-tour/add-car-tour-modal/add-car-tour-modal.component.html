@@ -19,6 +19,21 @@
       </div>
 
       <div class="form-group">
+        <label for="shift">Schicht</label>
+        <select class="form-control" id="shift"
+          required
+          [(ngModel)]="tour.tourShift" name="shift"
+          #shift="ngModel">
+          @for (tourShift of getTourShifts(); track tourShift) {
+            <option [value]="tourShift">{{ tourShift === 'DAY' ? 'Tagdienst' : 'Nachtdienst' }}</option>
+          }
+        </select>
+        <div [hidden]="shift.valid || shift.pristine" class="alert alert-danger">
+          Shift is required
+        </div>
+      </div>
+
+      <div class="form-group">
         <label for="car">Auto</label>
         <input type="text" class="form-control" id="car"
           [formControl]="carControl"
@@ -78,18 +93,17 @@
         </mat-autocomplete>
       </div>
 
-      <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
-      <mat-form-field class="date-picker">
-        <input matInput [matDatepicker]="pickerStart" placeholder="Dienststart" [(ngModel)]="tour.start" [formControl]="startControl">
-        <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
-        <mat-datepicker #pickerStart></mat-datepicker>
-      </mat-form-field>
+      <div class="form-group">
+        <label for="start">Dienststart</label>
+        <input type="datetime-local" class="form-control" id="start"
+          [(ngModel)]="startDateTime" name="start">
+      </div>
 
-      <mat-form-field class="date-picker">
-        <input matInput [matDatepicker]="pickerEnd" placeholder="Dienstende" [(ngModel)]="tour.end" [formControl]="endControl">
-        <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
-        <mat-datepicker #pickerEnd></mat-datepicker>
-      </mat-form-field>
+      <div class="form-group">
+        <label for="end">Dienstende</label>
+        <input type="datetime-local" class="form-control" id="end"
+          [(ngModel)]="endDateTime" name="end">
+      </div>
 
       @if (!tour.id) {
         <button

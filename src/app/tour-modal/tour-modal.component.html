@@ -15,79 +15,55 @@
       </button>
     </h3>
 
-    @for (carNumber of getCarNumbers(); track carNumber) {
-      @if (!expandNightShift) {
-        <car-tour
-          [tourType]="TourType.RTW"
-          [tourShift]="TourShift.DAY"
-          [car]="carNumber"
-          [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, carNumber)"
-          (addTour)="createTour($event)"
-          (removeTour)="deleteTour($event)"
-          (changeTour)="updateTour($event)"
-          >
-        </car-tour>
+    @if (!expandDayShift) {
+      @for (carNumber of getCarNumbersForShift(TourShift.DAY); track carNumber) {
+        @for (tourType of getTourTypesForShiftAndCar(TourShift.DAY, carNumber); track tourType) {
+          <car-tour
+            [tourType]="tourType"
+            [tourShift]="TourShift.DAY"
+            [car]="carNumber"
+            [tours]="getToursByTypeShiftAndCar(tourType, TourShift.DAY, carNumber)"
+            (addTour)="createTour($event)"
+            (removeTour)="deleteTour($event)"
+            (changeTour)="updateTour($event)"
+            >
+          </car-tour>
+        }
       }
     }
+  </div>
 
-    <!--car-tour
-    *ngIf="!expandDayShift"
-    [tourType]="TourType.RTW"
-    [tourShift]="TourShift.DAY"
-    [car]="'44.201'"
-    [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, '44.201')"
-    (addTour)="createTour($event)"
-    (removeTour)="deleteTour($event)"
-    (changeTour)="updateTour($event)"
-    >
-  </car-tour>
-  <car-tour
-    *ngIf="!expandDayShift"
-    [tourType]="TourType.KTW"
-    [tourShift]="TourShift.DAY"
-    [car]="'44.301'"
-    [tours]="getToursByTypeShiftAndCar(TourType.KTW, TourShift.DAY, '44.201')"
-    (addTour)="createTour($event)"
-    (removeTour)="deleteTour($event)"
-    (changeTour)="updateTour($event)"
-    >
-  </car-tour>
-  <car-tour
-    *ngIf="!expandDayShift"
-    [tourType]="TourType.BTW"
-    [tourShift]="TourShift.DAY"
-    [car]="'20.502'"
-    [tours]="getToursByTypeShiftAndCar(TourType.BTW, TourShift.DAY, '44.201')"
-    (addTour)="createTour($event)"
-    (removeTour)="deleteTour($event)"
-    (changeTour)="updateTour($event)"
-    >
-  </car-tour-->
-</div>
+  <div class="shift">
+    <h3>
+      Nachtdienst
+      <button (click)="toggleExpansionNightShift()" mat-button>
+        @if (expandNightShift) {
+          <mat-icon>expand_more</mat-icon>
+        }
+        @if (!expandNightShift) {
+          <mat-icon>expand_less</mat-icon>
+        }
+      </button>
+      <button (click)="newTour()" mat-button>
+        <mat-icon>add</mat-icon>
+      </button>
+    </h3>
 
-<div class="shift">
-  <h3>
-    Nachtdienst
-    <button (click)="toggleExpansionNightShift()" mat-button>
-      @if (expandNightShift) {
-        <mat-icon>expand_more</mat-icon>
+    @if (!expandNightShift) {
+      @for (carNumber of getCarNumbersForShift(TourShift.NIGHT); track carNumber) {
+        @for (tourType of getTourTypesForShiftAndCar(TourShift.NIGHT, carNumber); track tourType) {
+          <car-tour
+            [tourType]="tourType"
+            [tourShift]="TourShift.NIGHT"
+            [car]="carNumber"
+            [tours]="getToursByTypeShiftAndCar(tourType, TourShift.NIGHT, carNumber)"
+            (addTour)="createTour($event)"
+            (removeTour)="deleteTour($event)"
+            (changeTour)="updateTour($event)"
+            >
+          </car-tour>
+        }
       }
-      @if (!expandNightShift) {
-        <mat-icon>expand_less</mat-icon>
-      }
-    </button>
-  </h3>
-  @if (!expandNightShift) {
-    <car-tour
-      [tourType]="TourType.RTW"
-      [tourShift]="TourShift.NIGHT"
-      [car]="'44.201'"
-      [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.NIGHT, '44.201')"
-      (addTour)="createTour($event)"
-      (removeTour)="deleteTour($event)"
-      (changeTour)="updateTour($event)"
-      >
-    </car-tour>
-  }
-</div>
+    }
+  </div>
 </div>

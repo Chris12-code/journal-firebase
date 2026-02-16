@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit, ViewChild} from '@angular/core';
+import {Component, Inject, OnInit} from '@angular/core';
 import {CarTour} from "../../../model/car-tour";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {TourShift, TourType} from "../../tour-modal.component";
@@ -21,19 +21,15 @@ export interface TourDialogResult {
 })
 export class AddCarTourModalComponent implements OnInit {
 
-    @ViewChild('pickerStart') pickerStart: any;
-    @ViewChild('pickerEnd') pickerEnd: any;
-
     tour = new CarTour();
     persons: Person[];
+    startDateTime = '';
+    endDateTime = '';
 
     driverControl = new FormControl();
     carControl = new FormControl();
     tpfControl = new FormControl();
     thirdControl = new FormControl();
-
-    startControl = new FormControl();
-    endControl = new FormControl();
 
     filteredDrivers!: Observable<Person[]>;
     filteredCars!: Observable<string[]>;
@@ -67,11 +63,11 @@ export class AddCarTourModalComponent implements OnInit {
         }
 
         if (this.tour.start) {
-            this.startControl.setValue(this.tour.start);
+            this.startDateTime = this.toDateTimeLocal(this.toDate(this.tour.start));
         }
 
         if (this.tour.end) {
-            this.endControl.setValue(this.tour.end);
+            this.endDateTime = this.toDateTimeLocal(this.toDate(this.tour.end));
         }
 
         this.filteredDrivers = this.driverControl.valueChanges.pipe(
@@ -165,17 +161,25 @@ export class AddCarTourModalComponent implements OnInit {
     }
 
     newTour() {
-        console.log('Picker start', this.startControl.value);
         this.data.tour.tourType = this.tour.tourType;
-        this.data.tour.tourShift = TourShift.DAY;
+        this.data.tour.tourShift = this.tour.tourShift;
         this.data.tour.car = this.carControl.value;
         this.data.tour.driver = this.getPerson(this.driverControl.value);
         this.data.tour.tpf = this.getPerson(this.tpfControl.value);
         this.data.tour.third = this.getPerson(this.thirdControl.value);
-        this.data.tour.start = this.startControl.value;
-        this.data.tour.end = this.endControl.value;
-        console.log('set values', this.data);
+        this.data.tour.start = this.startDateTime ? new Date(this.startDateTime) : null;
+        this.data.tour.end = this.endDateTime ? new Date(this.endDateTime) : null;
         this.dialogRef.close(this.data);
+    }
+
+    private toDate(value: any): Date {
+        if (typeof value.toDate === 'function') return value.toDate();
+        return new Date(value);
+    }
+
+    private toDateTimeLocal(date: Date): string {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 
     getPerson(number: string): Person | null {
@@ -184,5 +188,9 @@ export class AddCarTourModalComponent implements OnInit {
 
     getTourTypes(): string[] {
         return Object.values(TourType);
+    }
+
+    getTourShifts(): string[] {
+        return Object.values(TourShift);
     }
 }

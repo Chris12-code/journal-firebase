@@ -79,6 +79,26 @@ export class TourModalComponent implements OnChanges{
         return carNumbers;
     }
 
+    getCarNumbersForShift(shift: TourShift): string[] {
+        const carNumbers: string[] = [];
+        this.tours.forEach(tour => {
+            if (tour.car && tour.tourShift === shift && !carNumbers.includes(tour.car)) {
+                carNumbers.push(tour.car);
+            }
+        });
+        return carNumbers;
+    }
+
+    getTourTypesForShiftAndCar(shift: TourShift, car: string): TourType[] {
+        const tourTypes: TourType[] = [];
+        this.tours.forEach(tour => {
+            if (tour.tourShift === shift && tour.car === car && tour.tourType && !tourTypes.includes(tour.tourType)) {
+                tourTypes.push(tour.tourType);
+            }
+        });
+        return tourTypes;
+    }
+
     newTour(): void {
         const dialogRef = this.dialog.open(AddCarTourModalComponent, {
             width: '320px',

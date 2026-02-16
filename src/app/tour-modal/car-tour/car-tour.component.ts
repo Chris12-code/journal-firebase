@@ -21,7 +21,7 @@ export class CarTourComponent implements OnChanges {
     @Output() removeTour = new EventEmitter<CarTour>();
 
     dataSourceTours: MatTableDataSource<CarTour> = new MatTableDataSource<CarTour>();
-    displayedColumnsTours: string[] = ['driver', 'tpf', 'third', 'action'];
+    displayedColumnsTours: string[] = ['driver', 'tpf', 'third', 'start', 'end', 'action'];
 
     constructor(private dialog: MatDialog) {
     }
@@ -78,5 +78,11 @@ export class CarTourComponent implements OnChanges {
 
     deleteTour(tour: CarTour) {
         this.removeTour.emit(tour);
+    }
+
+    toDate(value: any): Date | null {
+        if (!value) return null;
+        if (typeof value.toDate === 'function') return value.toDate();
+        return new Date(value);
     }
 }

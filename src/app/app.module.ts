@@ -14,9 +14,11 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RescueOperationDialogComponent} from './rescue-operation-modal/rescue-operation-dialog/rescue-operation-dialog.component';
 import {environment} from 'src/environments/environment';
-import {provideFirestore, getFirestore} from '@angular/fire/firestore';
-import {initializeApp} from 'firebase/app';
+import {provideFirestore} from '@angular/fire/firestore';
+import {initializeApp, getApp} from 'firebase/app';
 import {provideFirebaseApp} from '@angular/fire/app';
+import {getAuth as firebaseGetAuth} from 'firebase/auth';
+import {getFirestore as firebaseGetFirestore} from 'firebase/firestore';
 import {AddCarTourModalComponent} from './tour-modal/car-tour/add-car-tour-modal/add-car-tour-modal.component';
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatRadioModule} from "@angular/material/radio";
@@ -28,7 +30,7 @@ import {RescueOperationModalComponent} from "./rescue-operation-modal/rescue-ope
 import {CarTourComponent} from "./tour-modal/car-tour/car-tour.component";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatAutocompleteModule} from "@angular/material/autocomplete";
-import {getAuth, provideAuth} from "@angular/fire/auth";
+import {provideAuth} from "@angular/fire/auth";
 
 @NgModule({
     declarations: [
@@ -64,8 +66,8 @@ import {getAuth, provideAuth} from "@angular/fire/auth";
         MatDatepickerModule,
         MatNativeDateModule,
         provideFirebaseApp(() => initializeApp(environment.firebase)),
-        provideAuth(() => getAuth()),
-        provideFirestore(() => getFirestore()),
+        provideAuth(() => firebaseGetAuth(getApp())),
+        provideFirestore(() => firebaseGetFirestore(getApp())),
     ],
     bootstrap: [AppComponent]
 })

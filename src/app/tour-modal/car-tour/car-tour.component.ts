@@ -9,6 +9,7 @@ import {MatTableDataSource} from "@angular/material/table";
     selector: 'car-tour',
     templateUrl: './car-tour.component.html',
     styleUrls: ['./car-tour.component.css'],
+    standalone: false
 })
 export class CarTourComponent implements OnChanges {
     @Input() tourType!: TourType;

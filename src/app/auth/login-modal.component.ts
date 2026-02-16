@@ -19,7 +19,7 @@ export interface LoginDialogResult {
         FormsModule,
         MatCardModule,
         MatInputModule
-    ],
+    ]
 })
 export class LoginComponent {
     email: string = '';

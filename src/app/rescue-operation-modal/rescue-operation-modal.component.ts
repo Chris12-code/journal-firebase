@@ -6,14 +6,15 @@ import {
 import {
     addDoc,
     collection,
-    collectionData,
     deleteDoc,
     doc,
-    Firestore,
+    getFirestore,
     query,
     updateDoc,
     where
-} from "@angular/fire/firestore";
+} from "firebase/firestore";
+import {collectionData} from "@angular/fire/firestore";
+import {getApp} from "firebase/app";
 import {MatTableDataSource} from "@angular/material/table";
 import {RescueOperation} from "../model/rescue-operation";
 import {MatDialog} from "@angular/material/dialog";
@@ -23,7 +24,8 @@ import {CarTour} from "../model/car-tour";
 @Component({
     selector: 'rescue-operation-modal',
     templateUrl: './rescue-operation-modal.component.html',
-    styleUrls: ['./rescue-operation-modal.component.css']
+    styleUrls: ['./rescue-operation-modal.component.css'],
+    standalone: false
 })
 export class RescueOperationModalComponent {
 
@@ -36,7 +38,9 @@ export class RescueOperationModalComponent {
         'operationalLocation', 'destinationLocation', 'tour', 'action'
     ];
 
-    constructor(private dialog: MatDialog, private firestore: Firestore) {
+    private firestore = getFirestore(getApp());
+
+    constructor(private dialog: MatDialog) {
         this.getRescueOperationsFromLastDay();
         this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
     }

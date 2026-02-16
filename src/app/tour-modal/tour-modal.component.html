@@ -1,83 +1,93 @@
 <div class="tour-modal">
-    <div class="shift">
-        <h3>
-            Tagdienst
-            <button (click)="toggleExpansionDayShift()" mat-button>
-                <mat-icon *ngIf="expandDayShift">expand_more</mat-icon>
-                <mat-icon *ngIf="!expandDayShift">expand_less</mat-icon>
-            </button>
-            <button (click)="newTour()" mat-button>
-                <mat-icon>add</mat-icon>
-            </button>
-        </h3>
+  <div class="shift">
+    <h3>
+      Tagdienst
+      <button (click)="toggleExpansionDayShift()" mat-button>
+        @if (expandDayShift) {
+          <mat-icon>expand_more</mat-icon>
+        }
+        @if (!expandDayShift) {
+          <mat-icon>expand_less</mat-icon>
+        }
+      </button>
+      <button (click)="newTour()" mat-button>
+        <mat-icon>add</mat-icon>
+      </button>
+    </h3>
 
-        <ng-container *ngFor="let carNumber of getCarNumbers()">
-            <car-tour
-                    *ngIf="!expandNightShift"
-                    [tourType]="TourType.RTW"
-                    [tourShift]="TourShift.DAY"
-                    [car]="carNumber"
-                    [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, carNumber)"
-                    (addTour)="createTour($event)"
-                    (removeTour)="deleteTour($event)"
-                    (changeTour)="updateTour($event)"
-            >
-            </car-tour>
-        </ng-container>
+    @for (carNumber of getCarNumbers(); track carNumber) {
+      @if (!expandNightShift) {
+        <car-tour
+          [tourType]="TourType.RTW"
+          [tourShift]="TourShift.DAY"
+          [car]="carNumber"
+          [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, carNumber)"
+          (addTour)="createTour($event)"
+          (removeTour)="deleteTour($event)"
+          (changeTour)="updateTour($event)"
+          >
+        </car-tour>
+      }
+    }
 
-        <!--car-tour
-                *ngIf="!expandDayShift"
-                [tourType]="TourType.RTW"
-                [tourShift]="TourShift.DAY"
-                [car]="'44.201'"
-                [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, '44.201')"
-                (addTour)="createTour($event)"
-                (removeTour)="deleteTour($event)"
-                (changeTour)="updateTour($event)"
-        >
-        </car-tour>
-        <car-tour
-                *ngIf="!expandDayShift"
-                [tourType]="TourType.KTW"
-                [tourShift]="TourShift.DAY"
-                [car]="'44.301'"
-                [tours]="getToursByTypeShiftAndCar(TourType.KTW, TourShift.DAY, '44.201')"
-                (addTour)="createTour($event)"
-                (removeTour)="deleteTour($event)"
-                (changeTour)="updateTour($event)"
-        >
-        </car-tour>
-        <car-tour
-                *ngIf="!expandDayShift"
-                [tourType]="TourType.BTW"
-                [tourShift]="TourShift.DAY"
-                [car]="'20.502'"
-                [tours]="getToursByTypeShiftAndCar(TourType.BTW, TourShift.DAY, '44.201')"
-                (addTour)="createTour($event)"
-                (removeTour)="deleteTour($event)"
-                (changeTour)="updateTour($event)"
-        >
-        </car-tour-->
-    </div>
+    <!--car-tour
+    *ngIf="!expandDayShift"
+    [tourType]="TourType.RTW"
+    [tourShift]="TourShift.DAY"
+    [car]="'44.201'"
+    [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.DAY, '44.201')"
+    (addTour)="createTour($event)"
+    (removeTour)="deleteTour($event)"
+    (changeTour)="updateTour($event)"
+    >
+  </car-tour>
+  <car-tour
+    *ngIf="!expandDayShift"
+    [tourType]="TourType.KTW"
+    [tourShift]="TourShift.DAY"
+    [car]="'44.301'"
+    [tours]="getToursByTypeShiftAndCar(TourType.KTW, TourShift.DAY, '44.201')"
+    (addTour)="createTour($event)"
+    (removeTour)="deleteTour($event)"
+    (changeTour)="updateTour($event)"
+    >
+  </car-tour>
+  <car-tour
+    *ngIf="!expandDayShift"
+    [tourType]="TourType.BTW"
+    [tourShift]="TourShift.DAY"
+    [car]="'20.502'"
+    [tours]="getToursByTypeShiftAndCar(TourType.BTW, TourShift.DAY, '44.201')"
+    (addTour)="createTour($event)"
+    (removeTour)="deleteTour($event)"
+    (changeTour)="updateTour($event)"
+    >
+  </car-tour-->
+</div>
 
-    <div class="shift">
-        <h3>
-            Nachtdienst
-            <button (click)="toggleExpansionNightShift()" mat-button>
-                <mat-icon *ngIf="expandNightShift">expand_more</mat-icon>
-                <mat-icon *ngIf="!expandNightShift">expand_less</mat-icon>
-            </button>
-        </h3>
-        <car-tour
-                *ngIf="!expandNightShift"
-                [tourType]="TourType.RTW"
-                [tourShift]="TourShift.NIGHT"
-                [car]="'44.201'"
-                [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.NIGHT, '44.201')"
-                (addTour)="createTour($event)"
-                (removeTour)="deleteTour($event)"
-                (changeTour)="updateTour($event)"
-        >
-        </car-tour>
-    </div>
+<div class="shift">
+  <h3>
+    Nachtdienst
+    <button (click)="toggleExpansionNightShift()" mat-button>
+      @if (expandNightShift) {
+        <mat-icon>expand_more</mat-icon>
+      }
+      @if (!expandNightShift) {
+        <mat-icon>expand_less</mat-icon>
+      }
+    </button>
+  </h3>
+  @if (!expandNightShift) {
+    <car-tour
+      [tourType]="TourType.RTW"
+      [tourShift]="TourShift.NIGHT"
+      [car]="'44.201'"
+      [tours]="getToursByTypeShiftAndCar(TourType.RTW, TourShift.NIGHT, '44.201')"
+      (addTour)="createTour($event)"
+      (removeTour)="deleteTour($event)"
+      (changeTour)="updateTour($event)"
+      >
+    </car-tour>
+  }
+</div>
 </div>

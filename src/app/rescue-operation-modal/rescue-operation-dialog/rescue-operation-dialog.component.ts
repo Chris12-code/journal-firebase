@@ -18,9 +18,10 @@ export interface RescueOperationDialogResult {
 
 
 @Component({
-  selector: 'app-rescue-operation-dialog',
-  templateUrl: './rescue-operation-dialog.component.html',
-  styleUrls: ['./rescue-operation-dialog.component.css'],
+    selector: 'app-rescue-operation-dialog',
+    templateUrl: './rescue-operation-dialog.component.html',
+    styleUrls: ['./rescue-operation-dialog.component.css'],
+    standalone: false
 })
 export class RescueOperationDialogComponent implements OnInit{
 

@@ -19,6 +19,7 @@ export enum TourShift {
     selector: 'tour-modal',
     templateUrl: './tour-modal.component.html',
     styleUrls: ['./tour-modal.component.css'],
+    standalone: false
 })
 export class TourModalComponent implements OnChanges{
     @Input() tours!: CarTour[];

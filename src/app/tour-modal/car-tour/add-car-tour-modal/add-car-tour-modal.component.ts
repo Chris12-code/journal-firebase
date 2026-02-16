@@ -17,6 +17,7 @@ export interface TourDialogResult {
     templateUrl: './add-car-tour-modal.component.html',
     styleUrls: ['./add-car-tour-modal.component.css'],
     providers: [PersonUtilsService],
+    standalone: false
 })
 export class AddCarTourModalComponent implements OnInit {
 

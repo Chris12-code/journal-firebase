@@ -53,8 +53,8 @@ export class RescueOperationDialogComponent implements OnInit{
     );
   }
 
-  private _filterTours(value: string): CarTour[] {
-    const filterValue = value.toLowerCase();
+  private _filterTours(value: string | CarTour): CarTour[] {
+    const filterValue = typeof value === 'string' ? value.toLowerCase() : (value?.car?.toLowerCase() ?? '');
     return this.tours
         .filter(tour =>
             (

@@ -2,7 +2,7 @@ import {Component, Inject} from '@angular/core';
 import {AuthService} from "../lib/auth.service";
 import {FormsModule} from "@angular/forms";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import { UserCredential } from '@angular/fire/auth/public_api';
+import { UserCredential } from 'firebase/auth';
 import {MatCardModule} from "@angular/material/card";
 import {MatInputModule} from "@angular/material/input";
 

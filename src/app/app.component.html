@@ -1,46 +1,51 @@
 <mat-toolbar>
-    <img width="20%" src="./assets/logo_start.png">
-    <span>RK Strobl Journalblatt</span>
-    <span style="flex: 1 1 auto;"></span>
-    <button class="auth-buttons" *ngIf="user === null" (click)="login()">
-        <mat-icon>login</mat-icon>
+  <img width="20%" src="./assets/logo_start.png">
+  <span>RK Strobl Journalblatt</span>
+  <span style="flex: 1 1 auto;"></span>
+  @if (user === null) {
+    <button class="auth-buttons" (click)="login()">
+      <mat-icon>login</mat-icon>
     </button>
-    <button class="auth-buttons" *ngIf="user != null" (click)="logout()">
-        <mat-icon>logout</mat-icon>
+  }
+  @if (user != null) {
+    <button class="auth-buttons" (click)="logout()">
+      <mat-icon>logout</mat-icon>
     </button>
+  }
 </mat-toolbar>
 
-<div *ngIf="user === null">
+@if (user === null) {
+  <div>
     <p>Aktuell ist kein Benutzer angemeldet!</p>
-</div>
+  </div>
+}
 
-<div *ngIf="user !== null" class="content-wrapper">
-
+@if (user !== null) {
+  <div class="content-wrapper">
     <button [hidden]="operationsView" (click)="activateOperationsView()" mat-button>
-        <mat-icon>subject</mat-icon>
-        Einsatzübersicht
+      <mat-icon>subject</mat-icon>
+      Einsatzübersicht
     </button>
-
     <button [hidden]="teamView" (click)="activateTeamView()" mat-button>
-        <mat-icon>people_outline</mat-icon>
-        Dienstmannschaft
+      <mat-icon>people_outline</mat-icon>
+      Dienstmannschaft
     </button>
+  </div>
+}
 
-</div>
-
-<ng-container *ngIf="!operationsView && user !== null">
-    <tour-modal
-        [tours]="tours"
-        (tourAdded)="createTour($event)"
-        (tourDeleted)="deleteTour($event)"
-        (tourChanged)="updateTour($event)"
+@if (!operationsView && user !== null) {
+  <tour-modal
+    [tours]="tours"
+    (tourAdded)="createTour($event)"
+    (tourDeleted)="deleteTour($event)"
+    (tourChanged)="updateTour($event)"
     >
-    </tour-modal>
-</ng-container>
+  </tour-modal>
+}
 
-<ng-container *ngIf="operationsView && user !== null">
-    <rescue-operation-modal
-        [tours]="tours"
+@if (operationsView && user !== null) {
+  <rescue-operation-modal
+    [tours]="tours"
     >
-    </rescue-operation-modal>
-</ng-container>
+  </rescue-operation-modal>
+}

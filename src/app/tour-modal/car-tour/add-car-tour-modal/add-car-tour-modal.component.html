@@ -1,107 +1,119 @@
 <div class="container">
-    <div [hidden]="submitted">
-        <h1>Neue CarTour</h1>
-        <form (ngSubmit)="onSubmit()" #tourForm="ngForm">
+  <div [hidden]="submitted">
+    <h1>Neue CarTour</h1>
+    <form (ngSubmit)="onSubmit()" #tourForm="ngForm">
 
-            <div class="form-group">
-                <label for="type">Typ</label>
-                <select class="form-control" id="type"
-                        required
-                        [(ngModel)]="tour.tourType" name="type"
-                        #type="ngModel">
-                    <option *ngFor="let type of getTourTypes()" [value]="type">{{ type }}</option>
-                </select>
-                <div [hidden]="type.valid || type.pristine" class="alert alert-danger">
-                    Type is required
-                </div>
-            </div>
+      <div class="form-group">
+        <label for="type">Typ</label>
+        <select class="form-control" id="type"
+          required
+          [(ngModel)]="tour.tourType" name="type"
+          #type="ngModel">
+          @for (type of getTourTypes(); track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+        <div [hidden]="type.valid || type.pristine" class="alert alert-danger">
+          Type is required
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="car">Auto</label>
-                <input type="text" class="form-control" id="car"
-                       [formControl]="carControl"
-                       [matAutocomplete]="car"
-                       minlength="6">
-                <mat-autocomplete #car="matAutocomplete">
-                    <mat-option *ngFor="let car of filteredCars | async" [value]="car">
-                        {{ car }}
-                    </mat-option>
-                </mat-autocomplete>
-            </div>
+      <div class="form-group">
+        <label for="car">Auto</label>
+        <input type="text" class="form-control" id="car"
+          [formControl]="carControl"
+          [matAutocomplete]="car"
+          minlength="6">
+        <mat-autocomplete #car="matAutocomplete">
+          @for (car of filteredCars | async; track car) {
+            <mat-option [value]="car">
+              {{ car }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </div>
 
-            <div class="form-group">
-                <label for="driver">Fahrer</label>
-                <input type="text" class="form-control" id="driver"
-                       [formControl]="driverControl"
-                       [matAutocomplete]="autoDriver"
-                       minlength="3">
-                <mat-autocomplete #autoDriver="matAutocomplete">
-                    <mat-option *ngFor="let person of filteredDrivers | async" [value]="person.number">
-                        {{ person.name }}
-                    </mat-option>
-                </mat-autocomplete>
-            </div>
+      <div class="form-group">
+        <label for="driver">Fahrer</label>
+        <input type="text" class="form-control" id="driver"
+          [formControl]="driverControl"
+          [matAutocomplete]="autoDriver"
+          minlength="3">
+        <mat-autocomplete #autoDriver="matAutocomplete">
+          @for (person of filteredDrivers | async; track person) {
+            <mat-option [value]="person.number">
+              {{ person.name }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </div>
 
-            <div class="form-group">
-                <label for="tpf">TPF</label>
-                <input type="text" class="form-control" id="tpf"
-                       [formControl]="tpfControl"
-                       [matAutocomplete]="autoTpf"
-                       minlength="3">
-                <mat-autocomplete #autoTpf="matAutocomplete">
-                    <mat-option *ngFor="let person of filteredTpf | async" [value]="person.number">
-                        {{ person.name }}
-                    </mat-option>
-                </mat-autocomplete>
-            </div>
+      <div class="form-group">
+        <label for="tpf">TPF</label>
+        <input type="text" class="form-control" id="tpf"
+          [formControl]="tpfControl"
+          [matAutocomplete]="autoTpf"
+          minlength="3">
+        <mat-autocomplete #autoTpf="matAutocomplete">
+          @for (person of filteredTpf | async; track person) {
+            <mat-option [value]="person.number">
+              {{ person.name }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </div>
 
-            <div class="form-group">
-                <label for="third">Beifahrer</label>
-                <input type="text" class="form-control" id="third"
-                       [formControl]="thirdControl"
-                       [matAutocomplete]="autoThird"
-                       minlength="3">
-                <mat-autocomplete #autoThird="matAutocomplete">
-                    <mat-option *ngFor="let person of filteredThird | async" [value]="person.number">
-                        {{ person.name }}
-                    </mat-option>
-                </mat-autocomplete>
-            </div>
+      <div class="form-group">
+        <label for="third">Beifahrer</label>
+        <input type="text" class="form-control" id="third"
+          [formControl]="thirdControl"
+          [matAutocomplete]="autoThird"
+          minlength="3">
+        <mat-autocomplete #autoThird="matAutocomplete">
+          @for (person of filteredThird | async; track person) {
+            <mat-option [value]="person.number">
+              {{ person.name }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </div>
 
-            <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
-            <mat-form-field class="date-picker">
-                <input matInput [matDatepicker]="pickerStart" placeholder="Dienststart" [(ngModel)]="tour.start" [formControl]="startControl">
-                <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
-                <mat-datepicker #pickerStart></mat-datepicker>
-            </mat-form-field>
+      <!-- TODO: continue with providing proper date time pickers that can pass the value to the tour data model -->
+      <mat-form-field class="date-picker">
+        <input matInput [matDatepicker]="pickerStart" placeholder="Dienststart" [(ngModel)]="tour.start" [formControl]="startControl">
+        <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </mat-form-field>
 
-            <mat-form-field class="date-picker">
-                <input matInput [matDatepicker]="pickerEnd" placeholder="Dienstende" [(ngModel)]="tour.end" [formControl]="endControl">
-                <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
-                <mat-datepicker #pickerEnd></mat-datepicker>
-            </mat-form-field>
+      <mat-form-field class="date-picker">
+        <input matInput [matDatepicker]="pickerEnd" placeholder="Dienstende" [(ngModel)]="tour.end" [formControl]="endControl">
+        <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEnd></mat-datepicker>
+      </mat-form-field>
 
-            <button
-                    *ngIf="!tour.id"
-                    type="button"
-                    class="btn btn-default"
-                    [disabled]="!tourForm.form.valid"
+      @if (!tour.id) {
+        <button
+          type="button"
+          class="btn btn-default"
+          [disabled]="!tourForm.form.valid"
                     (click)="newTour();
                     tourForm.reset()"
-            >
-                Anlegen
-            </button>
-            <button
-                    *ngIf="tour.id"
-                    type="button"
-                    class="btn btn-default"
-                    [disabled]="!tourForm.form.valid"
+          >
+          Anlegen
+        </button>
+      }
+      @if (tour.id) {
+        <button
+          type="button"
+          class="btn btn-default"
+          [disabled]="!tourForm.form.valid"
                     (click)="newTour();
                     tourForm.reset()"
-            >
-                Aktualisieren
-            </button>
-        </form>
-    </div>
+          >
+          Aktualisieren
+        </button>
+      }
+    </form>
+  </div>
 
 </div>

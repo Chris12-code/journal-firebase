@@ -28,7 +28,6 @@ export class CarTourComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges) {
         if(changes['tours']) {
-            console.log('Tours changed', this.tours);
             this.dataSourceTours = new MatTableDataSource<CarTour>(this.tours);
         }
     }
@@ -44,13 +43,9 @@ export class CarTourComponent implements OnChanges {
         dialogRef
             .afterClosed()
             .subscribe((result: TourDialogResult|undefined) => {
-                console.log('Data received');
-                console.log(result);
                 if(!result) {
-                    console.log("Result invalid");
                     return;
                 }
-
                 this.addTour.emit(result.tour);
             });
     }
@@ -66,10 +61,7 @@ export class CarTourComponent implements OnChanges {
         dialogRef
             .afterClosed()
             .subscribe((result: TourDialogResult|undefined) => {
-                console.log('Data received');
-                console.log(result);
                 if(!result?.tour?.id) {
-                    console.log("Result invalid");
                     return;
                 }
                 this.changeTour.emit(result.tour);

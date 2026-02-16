@@ -37,8 +37,7 @@ export class LoginComponent {
                 this.data.userCredential = user;
                 this.dialogRef.close(this.data);
             },
-            error: (err) => {
-                console.error('Login error:', err);
+            error: () => {
                 this.data.userCredential = null;
                 this.dialogRef.close(this.data);
             }

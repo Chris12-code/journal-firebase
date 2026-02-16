@@ -7,7 +7,7 @@ import {TourType} from "./tour-modal/tour-modal.component";
 import {LoginComponent, LoginDialogResult} from "./auth/login-modal.component";
 import {MatDialog} from "@angular/material/dialog";
 import {AuthService} from "./lib/auth.service";
-import { User } from '@angular/fire/auth';
+import {User} from '@angular/fire/auth';
 
 @Component({
     selector: 'app-root',
@@ -46,7 +46,7 @@ export class AppComponent implements OnInit{
           val.forEach(element => {
             let temp = new CarTour(
                 element['id'],
-                element['tourType'] != null ? this.mapTourType(element['tourType']) : undefined,
+                element['tourType'] as TourType ?? undefined,
                 element['tourShift'] != null ? element['tourShift'] : null,
                 element["car"] != null ? element["car"] : null,
                 element["driver"],
@@ -56,13 +56,10 @@ export class AppComponent implements OnInit{
                 element["end"] != null ? element["end"] : null
             );
 
-            // TODO: change to 20 hours once the time picker is implemented
-            // only get tours that have a start data not longer ago than 20 hours
             const tourStart = new Date(element["start"].seconds * 1000);
-            if (temp.start && tourStart.getTime() > Date.now() - 30 * 60 * 60 * 1000) {
+            if (temp.start && tourStart.getTime() > Date.now() - 20 * 60 * 60 * 1000) {
               this.tours.push(temp);
             }
-            //this.dataSourceTours = new MatTableDataSource(this.tours);
           })
         });
 
@@ -77,33 +74,19 @@ export class AppComponent implements OnInit{
       tpf: tour.tpf ? { number: tour.tpf.number, name: tour.tpf.name, telephone: tour.tpf.telephone, email: tour.tpf.email } : null,
       third: tour.third ? { number: tour.third.number, name: tour.third.name, telephone: tour.third.telephone, email: tour.third.email } : null,
     };
-    addDoc(collectionInstance, plainTour)
-        .then(() => {
-          console.log('Data saved successfully');
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+    addDoc(collectionInstance, plainTour);
   }
 
   deleteTour(tour: CarTour) {
-    console.log('Delete Tour: ', tour);
     if (!tour.id) {
       return;
     }
     const docInstance = doc(this.firestore, 'car-tour', tour.id);
-    deleteDoc(docInstance)
-        .then(() => {
-          console.log('data is deleted');
-        })
-        .catch((e) => {
-          console.log(e);
-        })
+    deleteDoc(docInstance);
   }
 
   updateTour(carTour: CarTour) {
     if (!carTour?.id) {
-      console.log("Result invalid");
       return;
     }
     const docInstance = doc(this.firestore, 'car-tour', carTour.id);
@@ -124,26 +107,7 @@ export class AppComponent implements OnInit{
       third: carTour.third ? { number: carTour.third.number, name: carTour.third.name, telephone: carTour.third.telephone, email: carTour.third.email } : null,
     };
 
-    updateDoc(docInstance, plainTour)
-        .then(() => {
-          console.log('data updated');
-        })
-        .catch((e) => {
-          console.log(e);
-        })
-  }
-
-  private mapTourType(tourType: string): TourType | undefined {
-    switch (tourType) {
-      case 'RTW':
-        return TourType.RTW;
-      case 'KTW':
-        return TourType.KTW;
-      case 'BTW':
-        return TourType.BTW;
-      default:
-        return undefined;
-    }
+    updateDoc(docInstance, plainTour);
   }
 
   activateTeamView(): void {
@@ -168,7 +132,6 @@ export class AppComponent implements OnInit{
         .afterClosed()
         .subscribe((result: LoginDialogResult | undefined) => {
           if (!result?.userCredential) {
-            console.log("Login failed");
             return;
           }
 
@@ -181,9 +144,6 @@ export class AppComponent implements OnInit{
       next: () => {
         this.user = null;
       },
-      error: (err) => {
-        console.error('Logout error:', err);
-      }
     });
   }
 }

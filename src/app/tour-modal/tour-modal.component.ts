@@ -1,5 +1,4 @@
 import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
-import {MatTableDataSource} from "@angular/material/table";
 import {CarTour} from "../model/car-tour";
 import {AddCarTourModalComponent, TourDialogResult} from "./car-tour/add-car-tour-modal/add-car-tour-modal.component";
 import {MatDialog} from "@angular/material/dialog";
@@ -30,7 +29,6 @@ export class TourModalComponent implements OnChanges{
     protected readonly TourType = TourType;
     protected readonly TourShift = TourShift;
 
-    dataSourceTours: MatTableDataSource<CarTour> = new MatTableDataSource<CarTour>();
     expandDayShift = false;
     expandNightShift = false;
 
@@ -40,7 +38,6 @@ export class TourModalComponent implements OnChanges{
     ngOnChanges(changes: SimpleChanges) {
         if (changes['tours']) {
             this.tours = changes['tours'].currentValue;
-            this.dataSourceTours = new MatTableDataSource<CarTour>(this.tours);
         }
     }
 
@@ -66,17 +63,6 @@ export class TourModalComponent implements OnChanges{
 
     toggleExpansionNightShift() {
         this.expandNightShift = !this.expandNightShift;
-    }
-
-    getCarNumbers(): string[] {
-        const carNumbers: string[] = [];
-        this.tours.forEach(tour => {
-            if (tour.car && !carNumbers.includes(tour.car)) {
-                carNumbers.push(tour.car);
-            }
-        });
-
-        return carNumbers;
     }
 
     getCarNumbersForShift(shift: TourShift): string[] {
@@ -110,14 +96,9 @@ export class TourModalComponent implements OnChanges{
         dialogRef
         .afterClosed()
             .subscribe((result: TourDialogResult|undefined) => {
-                console.log('Data received');
-                console.log(result);
                 if(!result) {
-                    console.log("Result invalid");
                     return;
                 }
-
-                //this.addTour.emit(result.tour);
                 this.tourAdded.emit(result.tour);
             });
     }

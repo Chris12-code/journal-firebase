@@ -18,7 +18,6 @@ import {getApp} from "firebase/app";
 import {MatTableDataSource} from "@angular/material/table";
 import {RescueOperation} from "../model/rescue-operation";
 import {MatDialog} from "@angular/material/dialog";
-import {Observable} from "rxjs";
 import {CarTour} from "../model/car-tour";
 
 @Component({
@@ -33,7 +32,6 @@ export class RescueOperationModalComponent {
 
     dataSourceRescueOperations: MatTableDataSource<RescueOperation>;
     rescueOperations: RescueOperation[] = [];
-    operations!: Observable<any>;
     displayedColumnsRescueOperations: string[] = ['rescueType', 'rescueCategory', 'patient',
         'operationalLocation', 'destinationLocation', 'tour', 'action'
     ];
@@ -75,35 +73,6 @@ export class RescueOperationModalComponent {
                 });
             });
 
-        this.operations = collectionData(q, { idField: 'id' });
-    }
-
-    getRescueOperations() {
-        const collectionInstance = collection(this.firestore, 'rescue-operation');
-        collectionData(collectionInstance, { idField: 'id' })
-            .subscribe(val => {
-                this.rescueOperations = [];
-                if (val.length === 0) {
-                    this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
-                    return
-                }
-                val.forEach(element => {
-                    let temp = new RescueOperation(
-                        element['id'],
-                        element["rescueType"],
-                        element["rescueCategory"],
-                        element["patient"],
-                        element["operationalLocation"],
-                        element["destinationLocation"],
-                        element["tour"],
-                        element["timeStamp"],
-                    );
-                    this.rescueOperations.push(temp);
-                    this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
-                })
-            });
-
-        this.operations = collectionData(collectionInstance, { idField: 'id' });
     }
 
     newRescueOperation(): void {
@@ -119,7 +88,6 @@ export class RescueOperationModalComponent {
             .afterClosed()
             .subscribe((result: RescueOperationDialogResult | undefined) => {
                 if (!result?.rescueOperation) {
-                    console.log("Failed to create new rescue operation");
                     return;
                 }
 
@@ -142,12 +110,7 @@ export class RescueOperationModalComponent {
 
                 this.rescueOperations.push(result.rescueOperation);
                 const collectionInstance = collection(this.firestore, 'rescue-operation');
-                addDoc(collectionInstance, plainRescueOperation).then(() => {
-                    console.log('Data saved successfully');
-                })
-                    .catch((e) => {
-                        console.log(e);
-                    });
+                addDoc(collectionInstance, plainRescueOperation);
 
             });
     }
@@ -165,7 +128,6 @@ export class RescueOperationModalComponent {
             .afterClosed()
             .subscribe((result: RescueOperationDialogResult | undefined) => {
                 if (!result?.rescueOperation?.id) {
-                    console.log("Result invalid");
                     return;
                 }
 
@@ -197,13 +159,7 @@ export class RescueOperationModalComponent {
                         : null,
                 };
 
-                updateDoc(docInstance, plainRescueOperation)
-                    .then(() => {
-                        console.log('data updated');
-                    })
-                    .catch((e) => {
-                        console.log(e);
-                    })
+                updateDoc(docInstance, plainRescueOperation);
             });
     }
 
@@ -212,13 +168,7 @@ export class RescueOperationModalComponent {
             return;
         }
         const docInstance = doc(this.firestore, 'rescue-operation', rescueOperation.id);
-        deleteDoc(docInstance)
-            .then(() => {
-                console.log('data is deleted');
-            })
-            .catch((e) => {
-                console.log(e);
-            })
+        deleteDoc(docInstance);
     }
 
     displayTour(operation: RescueOperation): string {

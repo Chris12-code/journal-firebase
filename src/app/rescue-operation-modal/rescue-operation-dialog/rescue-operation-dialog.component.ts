@@ -5,11 +5,6 @@ import {CarTour} from "../../model/car-tour";
 import {FormControl} from "@angular/forms";
 import {map, Observable, startWith} from "rxjs";
 
-export interface RescueOperationDialogData {
-  rescueOperation: Partial<RescueOperation>;
-  enableDelete: boolean;
-}
-
 export interface RescueOperationDialogResult {
   rescueOperation: RescueOperation;
   delete?: boolean;

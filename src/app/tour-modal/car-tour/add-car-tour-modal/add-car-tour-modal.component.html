@@ -105,6 +105,12 @@
           [(ngModel)]="endDateTime" name="end">
       </div>
 
+      <div class="form-group">
+        <label for="visibleUntil">Sichtbar bis</label>
+        <input type="datetime-local" class="form-control" id="visibleUntil"
+          [(ngModel)]="visibleUntilDateTime" name="visibleUntil">
+      </div>
+
       @if (!tour.id) {
         <button
           type="button"

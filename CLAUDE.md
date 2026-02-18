@@ -67,5 +67,4 @@ No Angular Router — `AppComponent` toggles between two views with `@if`:
 
 ## Known TODOs
 
-- `app.component.ts`: Change 30-hour tour filter to 20 hours once time picker is fully implemented
 - `add-car-tour-modal.component.html`: Needs proper date-time picker for tour start/end times

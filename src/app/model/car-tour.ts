@@ -11,6 +11,7 @@ export class CarTour {
     public third: Person | null;
     public start: Date | null;
     public end: Date | null;
+    public visibleUntil: Date | null;
 
     constructor(
         id?: string,
@@ -21,7 +22,8 @@ export class CarTour {
         tpf?: Person,
         third?: Person,
         start?: Date,
-        end?: Date
+        end?: Date,
+        visibleUntil?: Date
     ) {
         this.id = id != null ? id : undefined;
         this.tourType = tourType != null ? tourType : null;
@@ -32,6 +34,7 @@ export class CarTour {
         this.third = third != null ? third : null;
         this.start = start != null ? start : null;
         this.end = end != null ? end : null;
+        this.visibleUntil = visibleUntil != null ? visibleUntil : null;
     }
 
     setId(id: string): void {

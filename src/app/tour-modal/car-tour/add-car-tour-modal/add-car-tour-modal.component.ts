@@ -25,6 +25,7 @@ export class AddCarTourModalComponent implements OnInit {
     persons: Person[];
     startDateTime = '';
     endDateTime = '';
+    visibleUntilDateTime = '';
 
     driverControl = new FormControl();
     carControl = new FormControl();
@@ -68,6 +69,10 @@ export class AddCarTourModalComponent implements OnInit {
 
         if (this.tour.end) {
             this.endDateTime = this.toDateTimeLocal(this.toDate(this.tour.end));
+        }
+
+        if (this.tour.visibleUntil) {
+            this.visibleUntilDateTime = this.toDateTimeLocal(this.toDate(this.tour.visibleUntil));
         }
 
         this.filteredDrivers = this.driverControl.valueChanges.pipe(
@@ -169,6 +174,7 @@ export class AddCarTourModalComponent implements OnInit {
         this.data.tour.third = this.getPerson(this.thirdControl.value);
         this.data.tour.start = this.startDateTime ? new Date(this.startDateTime) : null;
         this.data.tour.end = this.endDateTime ? new Date(this.endDateTime) : null;
+        this.data.tour.visibleUntil = this.visibleUntilDateTime ? new Date(this.visibleUntilDateTime) : null;
         this.dialogRef.close(this.data);
     }
 

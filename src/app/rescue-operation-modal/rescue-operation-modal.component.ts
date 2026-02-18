@@ -1,4 +1,5 @@
 import {Component, Input} from "@angular/core";
+import {DISPLAY_HOURS} from "../lib/constants";
 import {
     RescueOperationDialogComponent,
     RescueOperationDialogResult
@@ -43,9 +44,9 @@ export class RescueOperationModalComponent {
         this.dataSourceRescueOperations = new MatTableDataSource(this.rescueOperations);
     }
 
-    getRescueOperationsFromLastDay(lastNDays: number = 1) {
+    getRescueOperationsFromLastDay() {
         const now = new Date();
-        const hoursAgo = new Date(now.getTime() - lastNDays * 24 * 60 * 60 * 1000);
+        const hoursAgo = new Date(now.getTime() - DISPLAY_HOURS * 60 * 60 * 1000);
 
         const collectionInstance = collection(this.firestore, 'rescue-operation');
         const q = query(collectionInstance, where('timeStamp', '>=', hoursAgo));
@@ -58,6 +59,11 @@ export class RescueOperationModalComponent {
                     return;
                 }
                 val.forEach(element => {
+                    const visibleUntilSeconds = element['tour']?.['visibleUntil']?.seconds;
+                    if (visibleUntilSeconds != null && visibleUntilSeconds * 1000 <= Date.now()) {
+                        return;
+                    }
+
                     let temp = new RescueOperation(
                         element['id'],
                         element["rescueType"],
@@ -103,7 +109,8 @@ export class RescueOperationModalComponent {
                             tpf: result.rescueOperation.tour.tpf ? { number: result.rescueOperation.tour.tpf.number, name: result.rescueOperation.tour.tpf.name, telephone: result.rescueOperation.tour.tpf.telephone, email: result.rescueOperation.tour.tpf.email } : null,
                             third: result.rescueOperation.tour.third ? { number: result.rescueOperation.tour.third.number, name: result.rescueOperation.tour.third.name, telephone: result.rescueOperation.tour.third.telephone, email: result.rescueOperation.tour.third.email } : null,
                             start: result.rescueOperation.tour.start,
-                            end: result.rescueOperation.tour.end
+                            end: result.rescueOperation.tour.end,
+                            visibleUntil: result.rescueOperation.tour.visibleUntil ?? null,
                         }
                         : null,
                 };
@@ -154,7 +161,8 @@ export class RescueOperationModalComponent {
                             tpf: result.rescueOperation.tour.tpf ? { number: result.rescueOperation.tour.tpf.number, name: result.rescueOperation.tour.tpf.name, telephone: result.rescueOperation.tour.tpf.telephone, email: result.rescueOperation.tour.tpf.email } : null,
                             third: result.rescueOperation.tour.third ? { number: result.rescueOperation.tour.third.number, name: result.rescueOperation.tour.third.name, telephone: result.rescueOperation.tour.third.telephone, email: result.rescueOperation.tour.third.email } : null,
                             start: result.rescueOperation.tour.start,
-                            end: result.rescueOperation.tour.end
+                            end: result.rescueOperation.tour.end,
+                            visibleUntil: result.rescueOperation.tour.visibleUntil ?? null,
                         }
                         : null,
                 };

@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {CarTour} from "./model/car-tour";
+import {DISPLAY_HOURS} from "./lib/constants";
 import {collection, addDoc, deleteDoc, doc, updateDoc, getFirestore} from "firebase/firestore";
 import {collectionData} from "@angular/fire/firestore";
 import {getApp} from "firebase/app";
@@ -44,6 +45,10 @@ export class AppComponent implements OnInit{
         .subscribe(val => {
           this.tours = []
           val.forEach(element => {
+            const visibleUntil = element['visibleUntil']
+                ? new Date(element['visibleUntil'].seconds * 1000)
+                : null;
+
             let temp = new CarTour(
                 element['id'],
                 element['tourType'] as TourType ?? undefined,
@@ -53,11 +58,18 @@ export class AppComponent implements OnInit{
                 element["tpf"] != null ? element["tpf"] : null,
                 element["third"] != null ? element["third"] : null,
                 element["start"] != null ? element["start"] : null,
-                element["end"] != null ? element["end"] : null
+                element["end"] != null ? element["end"] : null,
+                visibleUntil ?? undefined
             );
 
+            if (!element["start"]?.seconds) {
+              return;
+            }
             const tourStart = new Date(element["start"].seconds * 1000);
-            if (temp.start && tourStart.getTime() > Date.now() - 20 * 60 * 60 * 1000) {
+            const isVisible = visibleUntil
+                ? visibleUntil > new Date()
+                : tourStart.getTime() > Date.now() - DISPLAY_HOURS * 60 * 60 * 1000;
+            if (isVisible) {
               this.tours.push(temp);
             }
           })
@@ -73,6 +85,7 @@ export class AppComponent implements OnInit{
       driver: tour.driver ? { number: tour.driver.number, name: tour.driver.name, telephone: tour.driver.telephone, email: tour.driver.email } : null,
       tpf: tour.tpf ? { number: tour.tpf.number, name: tour.tpf.name, telephone: tour.tpf.telephone, email: tour.tpf.email } : null,
       third: tour.third ? { number: tour.third.number, name: tour.third.name, telephone: tour.third.telephone, email: tour.third.email } : null,
+      visibleUntil: tour.visibleUntil ?? null,
     };
     addDoc(collectionInstance, plainTour);
   }
@@ -99,6 +112,7 @@ export class AppComponent implements OnInit{
       third: carTour.third,
       start: carTour.start,
       end: carTour.end,
+      visibleUntil: carTour.visibleUntil ?? null,
     }
     const plainTour = {
       ...updatedCarTour,

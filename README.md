@@ -1,54 +1,80 @@
-# Documentation
+# RK Strobl Journalblatt
 
-## Used technology
-Angular 15 and angularfire 7.
+Digitales Journalblatt der Rotkreuz-Dienststelle Strobl: Dienstmannschaft (Touren), Fahrten und Jahresbericht
+(Stunden und Fahrten pro Person).
 
-Some great sources to get informed:
-* [https://github.com/angular/angularfire/tree/master/docs](Doc Angularfire)
-* [https://developers.google.com/codelabs/building-a-web-app-with-angular-and-firebase?hl=de#0](Reading)
-* [https://www.youtube.com/watch?v=HXSqKW4JCr4](Video)
+## Entwicklung
 
-## Run application
-* ng serve
+```bash
+npm install
+npm start                 # Dev-Server auf http://localhost:4200 (verbindet zum echten Firebase-Projekt!)
+```
 
-## Deploy to firebase
-* ng build
-* firebase deploy
+Zum Entwickeln ohne echte Daten die Emulatoren verwenden:
 
-Troubleshooting: If the deployment does not work try firebase login or firebase logout and firebase login again. 
+```bash
+firebase emulators:start --only auth,firestore     # Terminal 1 (Emulator-UI: http://localhost:4000)
+npx ng serve --configuration=e2e                   # Terminal 2: App gegen die Emulatoren
+```
 
-## Authentication
+Testbenutzer und Testdaten legt `npm run e2e` automatisch an (siehe `e2e/helpers/emulator.ts`).
 
-The user can be managed under: https://console.firebase.google.com/project/rk-strobl-journalblatt/authentication/users?hl=de
+## Tests
 
-## Monitor the app usage and potential costs
+| Befehl | Was | Voraussetzung |
+|---|---|---|
+| `npm run test:ci` | Unit-Tests (Domain, Mapper, Services, Helfer) | Chrome |
+| `npm run test:integration` | Firestore-Repositories gegen die Emulatoren | Java, Chrome |
+| `npm run test:rules` | Firestore-Sicherheitsregeln | Java |
+| `npm run e2e` | Playwright-Tests im Browser gegen die Emulatoren | Java |
+| `npm run check:layers` | Prüft die Schichtenregeln (Firebase nur in `data/`) | – |
 
-https://console.firebase.google.com/project/rk-strobl-journalblatt/usage?hl=de
+`test:integration`, `test:rules` und `e2e` starten die Emulatoren selbst.
 
-# Test
+## Deployment
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.8.
+```bash
+npm run build
+firebase deploy --only firestore   # Regeln und Indizes
+firebase deploy --only hosting     # App
+```
 
-## Development server
+Bei Problemen: `firebase logout` und `firebase login`.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Stammdaten pflegen (Firebase-Konsole)
 
-## Code scaffolding
+Personen und Fahrzeuge werden in der Firebase-Konsole gepflegt; die App liest sie nur
+(Firestore → Daten: https://console.firebase.google.com/project/rk-strobl-journalblatt/firestore).
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+**Personen** – Sammlung `persons`, **Dokument-ID = Dienstnummer** (z. B. `07414`):
 
-## Build
+| Feld | Typ | Pflicht | Beispiel |
+|---|---|---|---|
+| `name` | string | ja | `Nachname Vorname` |
+| `phone` | string | nein | `0043 660 …` |
+| `email` | string | nein | `name@example.at` |
+| `active` | boolean | ja | `true` |
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+**Fahrzeuge** – Sammlung `vehicles`, **Dokument-ID = Fahrzeugnummer** (z. B. `44.201`):
 
-## Running unit tests
+| Feld | Typ | Pflicht | Beispiel |
+|---|---|---|---|
+| `type` | string | ja | `RTW`, `KTW` oder `BTW` |
+| `active` | boolean | ja | `true` |
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Regeln:
 
-## Running end-to-end tests
+- **Nie löschen, sondern `active` auf `false` setzen.** Ausgeschiedene Personen und alte Fahrzeuge müssen in
+  bestehenden Touren, Fahrten und Jahresberichten weiter auflösbar sein. Inaktive Einträge werden nur nicht mehr
+  zur Auswahl angeboten.
+- Die Dokument-ID nicht ändern – Touren und Fahrten verweisen darauf.
+- Ein Dokument ohne `active`-Feld gilt als aktiv.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## Benutzer
 
-## Further help
+Jede Person meldet sich mit einem persönlichen Konto an (E-Mail/Passwort). Konten werden hier verwaltet:
+https://console.firebase.google.com/project/rk-strobl-journalblatt/authentication/users
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## Nutzung und Kosten
+
+https://console.firebase.google.com/project/rk-strobl-journalblatt/usage

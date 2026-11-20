@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// Access rules for the RK Strobl Journalblatt (see spec journal-access, master-data).
+// - Every access requires a logged-in user. There are no further roles.
+// - persons / vehicles are maintained in the Firebase console and read-only for the app.
+// - tours / rides carry author stamps that must match the writing user.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validCreate() {
+      let d = request.resource.data;
+      return d.createdBy == request.auth.uid
+        && d.updatedBy == request.auth.uid
+        && d.createdAt == request.time
+        && d.updatedAt == request.time;
+    }
+
+    function validUpdate() {
+      let d = request.resource.data;
+      return d.updatedBy == request.auth.uid
+        && d.updatedAt == request.time
+        && d.createdBy == resource.data.createdBy
+        && d.createdAt == resource.data.createdAt;
+    }
+
+    match /persons/{personId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /tours/{tourId} {
+      allow read, delete: if signedIn();
+      allow create: if signedIn() && validCreate();
+      allow update: if signedIn() && validUpdate();
+    }
+
+    match /rides/{rideId} {
+      allow read, delete: if signedIn();
+      allow create: if signedIn() && validCreate();
+      allow update: if signedIn() && validUpdate();
+    }
+
+    // Legacy collections of the previous app version.
+    // Keep them usable until the cut-over, then remove these two blocks.
+    match /car-tour/{docId} {
+      allow read, write: if signedIn();
+    }
+
+    match /rescue-operation/{docId} {
+      allow read, write: if signedIn();
+    }
+  }
+}

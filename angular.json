@@ -16,9 +16,7 @@
             "outputPath": "dist/journal-firebase",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
@@ -44,7 +42,13 @@
                   "maximumError": "4kb"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "buildOptimizer": false,
@@ -53,6 +57,20 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
+            },
+            "e2e": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -65,6 +83,9 @@
             },
             "development": {
               "buildTarget": "test:build:development"
+            },
+            "e2e": {
+              "buildTarget": "test:build:e2e"
             }
           },
           "defaultConfiguration": "development"
@@ -91,7 +112,18 @@
               "@angular/material/prebuilt-themes/deeppurple-amber.css",
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "exclude": [
+              "**/*.integration.spec.ts"
+            ]
+          },
+          "configurations": {
+            "integration": {
+              "include": [
+                "**/*.integration.spec.ts"
+              ],
+              "exclude": []
+            }
           }
         }
       }

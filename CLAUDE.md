@@ -1,70 +1,68 @@
 # RK Strobl Journalblatt
 
-Digital journal sheet for **Red Cross Strobl** (Rotes Kreuz Strobl) to track vehicle tours, crew assignments, and rescue operations during shifts.
+Digital journal sheet for **Red Cross Strobl** (Rotes Kreuz Strobl): records the crew on duty (tours), the rides,
+and produces yearly statistics (hours worked and rides per person). The UI is in German.
 
 ## Tech Stack
 
-- **Angular 21** with Angular Material 21, TypeScript 5.9
-- **Firebase**: Firestore (database), Authentication (email/password), Hosting
-- **@angular/fire 20** — Firebase providers are in `providers` array (not `imports`), and Firestore/Auth instances use native Firebase SDK (`getFirestore(getApp())`, `getAuth(getApp())`) instead of `@angular/fire` DI injection
-- **RxJS 7.8** for reactive state (BehaviorSubjects, no NgRx)
+- **Angular 21**, standalone components, **signals**, **zoneless** change detection, Angular Router, Angular Material 21
+- **Firebase** with the **native SDK only** (`firebase` 10): Firestore, Authentication (email/password, personal logins), Hosting. No `@angular/fire`.
+- Tests: Karma/Jasmine (unit + integration), `@firebase/rules-unit-testing` (rules), Playwright (e2e), all against the Firebase emulators
 - Firebase project ID: `rk-strobl-journalblatt`
 
-## Project Structure
+## Architecture: four layers
 
 ```
 src/app/
-  app.module.ts                    # Root NgModule (not standalone)
-  app.component.ts                 # Root component, manages car tours via Firestore
-  auth/
-    login-modal.component.ts       # Login dialog (standalone component)
-  lib/
-    auth.service.ts                # Firebase auth service (BehaviorSubject<User>)
-    person-utils.service.ts        # Loads static personnel data from persons.json
-  model/
-    car-tour.ts                    # CarTour class
-    rescue-operation.ts            # RescueOperation class
-    person.ts                      # Person class
-  tour-modal/
-    tour-modal.component.ts        # Tour tables container, filters by shift/type
-    car-tour/
-      car-tour.component.ts        # Single vehicle tour table
-      add-car-tour-modal/
-        add-car-tour-modal.component.ts  # Create/edit tour dialog
-  rescue-operation-modal/
-    rescue-operation-modal.component.ts      # Rescue operations table + Firestore CRUD
-    rescue-operation-dialog/
-      rescue-operation-dialog.component.ts   # Create/edit rescue operation dialog
-src/data/
-  persons.json                     # Static personnel records (~11 members)
-src/environments/
-  environment.ts                   # Dev Firebase config
-  environment.prod.ts              # Prod Firebase config
+  ui/           standalone components, dialogs, routes, guards     -> application, domain
+  application/  services with signals, repository ports (ports.ts)  -> domain
+  domain/       plain TypeScript: model, rules, report calculation   (imports nothing)
+  data/         Firestore repositories, mappers, Firebase providers  -> application (ports), domain
+  app.config.ts composition root: binds data implementations to the ports
 ```
 
-## Key Domain Concepts
+Rules, enforced by `npm run check:layers` (`scripts/check-layers.mjs`):
+- `firebase/*` may only be imported in `data/`.
+- `domain/` imports nothing outside `domain/` (no Angular, no rxjs).
+- `application/` must not import `ui/` or `data/`; `ui/` must not import `data/`.
 
-- **Car Tours**: Vehicle assignments with crew for a shift. Each has a type (RTW/KTW/BTW), shift (DAY/NIGHT), vehicle number (e.g. 44.201), and crew (driver, tpf, third)
-- **Rescue Operations**: Emergency responses linked to a car tour. Categorized by type (NA/RD/KT), category (CPR/VU/Kinder), and patient type
-- **Person**: Crew member with employee number, name, phone, email
+Business rules belong in `domain/` as pure functions with unit tests. Firestore document shapes are only known to
+`data/mappers.ts` (Timestamps never leave it; optional fields are stored as explicit `null`).
 
-## Firestore Collections
+## Domain (see `openspec/changes/restructure-journal-domain/` until archived, then `openspec/specs/`)
 
-- `car-tour` — filtered client-side to last 30 hours
-- `rescue-operation` — queried with `where('timeStamp', '>=', hoursAgo)`
+- **Tour** = one shift (DAY/NIGHT) with an optional home vehicle. Crew members have their own role
+  (DRIVER/TPF/THIRD) and `from`/`to` times; people can join, leave, be replaced or swap roles mid-tour.
+  A tour does not own a car; tours may overlap (handover, overtime). Ending a tour closes all open entries.
+- **Ride** = alarm time, optional return time, the vehicle actually used, the tour, a **frozen crew snapshot**
+  (pre-filled from members active at alarm time), type (NA/RD/KT), optional category/patient/locations.
+- **Yearly report**: hours = union of a person's closed member intervals clipped to the year (local time);
+  open entries are listed, not counted. Rides = rides in the year whose snapshot contains the person.
+- Persons and vehicles are read-only master data maintained in the Firebase console (doc ID = employee number /
+  vehicle number), deactivated instead of deleted.
 
-## Navigation
+## Firestore collections
 
-No Angular Router — `AppComponent` toggles between two views with `@if`:
-- **Operations view** (default): rescue operations table
-- **Team view**: car tour tables organized by vehicle/shift/type
+- `persons`, `vehicles` – master data, read-only for clients
+- `tours` – `members[]` embedded; denormalized `start`/`end` (end = null while active) for queries only
+- `rides`
+- All tours/rides carry `createdBy/createdAt/updatedBy/updatedAt`, set by the repositories and checked by `firestore.rules`
+- Legacy `car-tour` / `rescue-operation` are no longer used (rules keep them open until the cut-over cleanup)
 
 ## Commands
 
-- `npm start` / `ng serve` — dev server on localhost:4200
-- `npm run build` / `ng build` — production build to dist/journal-firebase
-- `firebase deploy` — deploy to Firebase Hosting
+- `npm start` – dev server on localhost:4200 (real Firebase project)
+- `npx ng serve --configuration=e2e` – dev server against the emulators (`firebase emulators:start --only auth,firestore`)
+- `npm run build` – production build to `dist/journal-firebase`
+- `npm run test:ci` – unit tests (headless Chrome, `TZ=Europe/Vienna`)
+- `npm run test:integration` – repository tests against the emulators (`*.integration.spec.ts`)
+- `npm run test:rules` – Firestore rules tests
+- `npm run e2e` – Playwright tests; starts emulators and dev server, seeds fictional test data
+- `npm run check:layers` – layer rule check
+- `firebase deploy --only firestore` / `--only hosting`
 
-## Known TODOs
+## Gotchas
 
-- `add-car-tour-modal.component.html`: Needs proper date-time picker for tour start/end times
+- Zoneless: plain component fields changed after an `await` need `ChangeDetectorRef.markForCheck()` (or use signals).
+- In functional guards, call `inject()` before the first `await`.
+- Never put real personnel data into the repo; e2e/emulator seeds use fictional persons only.

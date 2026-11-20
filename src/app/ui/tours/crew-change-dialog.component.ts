@@ -128,7 +128,10 @@ export class CrewChangeDialogComponent {
   protected readonly tourLabel = tourTitle(this.data.tour, this.md);
   protected readonly activeMembers = this.data.tour.members.filter(m => !m.to);
 
-  protected at = toLocalInput(nowMinute());
+  /** Ending a tour linked to a planned slot proposes the planned end; everything else proposes now. */
+  protected at = toLocalInput(
+    (this.data.mode === 'endTour' ? this.journal.slotOf(this.data.tour)?.end : undefined) ?? nowMinute(),
+  );
   protected personId = '';
   protected role: Role = 'THIRD';
   protected swapA = this.activeMembers[0]?.id ?? '';

@@ -90,6 +90,9 @@ export function endTour(tour: Tour, at: Date): Tour {
 /** Checks the rules that prevent saving. An empty list means the tour is valid. */
 export function validateTour(tour: Tour): ValidationError[] {
   const errors: ValidationError[] = [];
+  if (tour.kind === 'EXTRA' && tour.slotKey) {
+    errors.push({code: 'SLOT_ON_EXTRA', message: 'Ein Zusatzfahrzeug kann keinen geplanten Dienst besetzen.'});
+  }
   if (!SHIFTS.includes(tour.shift)) {
     errors.push({code: 'MISSING_SHIFT', message: 'Bitte eine Schicht (Tag/Nacht) wählen.'});
   }

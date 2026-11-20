@@ -1,7 +1,8 @@
 import {computed, inject, Injectable, untracked} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {catchError, of, switchMap} from 'rxjs';
-import {CrewMember, Ride, Role, Shift, Tour, ValidationError} from '../domain/model';
+import {CrewMember, Ride, Role, Shift, Tour, TourKind, ValidationError} from '../domain/model';
+import {PlannedSlot, slotByKey, slotsBetween, SlotStatus, slotStatus} from '../domain/shift-plan';
 import {prefillRide, toursActiveAt, validateRide} from '../domain/ride';
 import * as rules from '../domain/tour';
 import {Clock, DISPLAY_HOURS, HOUR_MS} from './clock';
@@ -11,10 +12,21 @@ import {SessionService} from './session.service';
 export type Result = {ok: true; id: string} | {ok: false; errors: ValidationError[]};
 
 export interface StartTourInput {
+  kind?: TourKind;
+  slotKey?: string;
   shift: Shift;
   homeVehicleId?: string;
   at: Date;
   crew: {personId: string; role: Role}[];
+}
+
+/** How far ahead planned slots are shown. */
+export const PLAN_AHEAD_HOURS = 24;
+
+export interface PlannedSlotView {
+  slot: PlannedSlot;
+  status: SlotStatus;
+  tour?: Tour;
 }
 
 const TOUR_HAS_RIDES: ValidationError = {
@@ -73,6 +85,24 @@ export class JournalService {
       .sort((a, b) => b.alarmAt.getTime() - a.alarmAt.getTime());
   });
 
+  /**
+   * Planned slots that are running, start within the next 24 hours or ended within the display window,
+   * each with its status and linked tour (spec shift-plan).
+   */
+  readonly plannedSlots = computed<PlannedSlotView[]>(() => {
+    const now = this.clock.now();
+    const tours = this.loadedTours();
+    return slotsBetween(this.windowStart(), new Date(now.getTime() + PLAN_AHEAD_HOURS * HOUR_MS)).map(slot => ({
+      slot,
+      ...slotStatus(slot, tours, now),
+    }));
+  });
+
+  /** The planned slot a tour is linked to, if any. */
+  slotOf(tour: Tour): PlannedSlot | undefined {
+    return slotByKey(tour.slotKey);
+  }
+
   tourById(id: string | undefined): Tour | undefined {
     return id ? this.loadedTours().find(t => t.id === id) : undefined;
   }
@@ -91,7 +121,13 @@ export class JournalService {
   }
 
   startTour(input: StartTourInput): Promise<Result> {
-    let tour: Tour = {shift: input.shift, homeVehicleId: input.homeVehicleId || undefined, members: []};
+    let tour: Tour = {
+      kind: input.kind ?? 'SHIFT',
+      shift: input.shift,
+      homeVehicleId: input.homeVehicleId || undefined,
+      members: [],
+    };
+    if (input.slotKey) tour = {...tour, slotKey: input.slotKey};
     for (const c of input.crew.filter(c => !!c.personId)) {
       tour = rules.addMember(tour, {personId: c.personId, role: c.role, from: input.at});
     }

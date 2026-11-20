@@ -64,10 +64,17 @@ import {tourTitle} from '../tours/tour-text';
         @if (report.openEntries.length) {
           <section class="open">
             <h3>Offene Einträge (nicht gezählt)</h3>
-            <p class="muted">Bei diesen Einträgen fehlt die Endzeit. Bitte in der Dienstmannschaft austragen oder korrigieren.</p>
+            <p class="muted">
+              Bei diesen Einträgen fehlt eine Zeit. Dienste bitte in der Dienstmannschaft austragen oder korrigieren,
+              Fahrten von Zusatzfahrzeugen bitte um die Rückkehrzeit ergänzen.
+            </p>
             <ul>
-              @for (n of report.openEntries; track n.memberId) {
-                <li>{{ n.name }} · seit {{ n.from | date: 'dd.MM.yyyy HH:mm' }} · {{ tourLabel(n) }}</li>
+              @for (n of report.openEntries; track n.key) {
+                @if (n.kind === 'MEMBER') {
+                  <li class="member">{{ n.name }} · seit {{ n.from | date: 'dd.MM.yyyy HH:mm' }} · {{ tourLabel(n) }} · Ende fehlt</li>
+                } @else {
+                  <li class="ride">Fahrt am {{ n.from | date: 'dd.MM.yyyy HH:mm' }} · {{ tourLabel(n) }} · {{ n.name }} · Rückkehrzeit fehlt</li>
+                }
               }
             </ul>
           </section>

@@ -8,7 +8,7 @@ const persons = ['huber', 'maier', 'beer', 'beshiri', 'eder'].map(n => person(n)
 
 const ride = (alarmAt: Date, personIds: string[], vehicleId = '44.201'): Ride => ({
   tourId: 'day',
-  vehicleId,
+  vehicleIds: [vehicleId],
   alarmAt,
   crew: personIds.map(personId => ({personId, role: 'DRIVER' as const})),
   type: 'RD',
@@ -73,7 +73,7 @@ describe('yearly report', () => {
       const report = yearReport(2027, [dayTour()], [], persons);
       expect(row(report, 'huber').hours).toBe(0);
       expect(report.openEntries.length).toBe(3);
-      expect(report.openEntries[0]).toEqual(jasmine.objectContaining({personId: 'huber', tourId: 'day', from: t(6)}));
+      expect(report.openEntries[0]).toEqual(jasmine.objectContaining({kind: 'MEMBER', key: 'd', personId: 'huber', tourId: 'day', from: t(6)}));
     });
 
     it('ignores open entries that start after the selected year', () => {
@@ -110,4 +110,77 @@ describe('yearly report', () => {
       expect(report.rows.some(r => r.personId === 'gone')).toBeFalse();
     });
   });
+
+  describe('extra car tours', () => {
+    // RTW crew is out; huber and maier take the KTW. Member times of the extra tour are deliberately misleading.
+    const extra: Tour = {
+      id: 'extra', kind: 'EXTRA', shift: 'DAY', homeVehicleId: '44.301',
+      members: [
+        {id: 'e1', personId: 'huber', role: 'DRIVER', from: t(6), to: t(20)},
+        {id: 'e2', personId: 'maier', role: 'TPF', from: t(6), to: t(20)},
+      ],
+    };
+    const extraRide = (id: string, from: Date, to: Date | undefined, crew: string[]): Ride => ({
+      id, tourId: 'extra', vehicleIds: ['44.301'], alarmAt: from, returnedAt: to,
+      crew: crew.map(personId => ({personId, role: 'DRIVER'})), type: 'KT',
+    });
+
+    it('counts from the first ride to the last ride, including the gap, not the member times', () => {
+      const rides = [extraRide('r1', t(10), t(11), ['huber', 'maier']), extraRide('r2', t(12), t(13, 30), ['huber'])];
+      const report = yearReport(2027, [extra], rides, persons);
+      expect(row(report, 'huber').hours).toBe(3.5);
+      expect(row(report, 'huber').rides).toBe(2);
+    });
+
+    it('counts a person only on the second ride from that ride', () => {
+      const rides = [extraRide('r1', t(10), t(11), ['huber']), extraRide('r2', t(12), t(13, 30), ['huber', 'maier'])];
+      expect(row(yearReport(2027, [extra], rides, persons), 'maier').hours).toBe(1.5);
+    });
+
+    it('flags a ride without return time and counts no hours for it', () => {
+      const rides = [extraRide('r1', t(10), t(11), ['huber']), extraRide('r2', t(12), undefined, ['huber', 'maier'])];
+      const report = yearReport(2027, [extra], rides, persons);
+      expect(row(report, 'huber').hours).toBe(1);
+      expect(row(report, 'maier').hours).toBe(0);
+      expect(row(report, 'maier').rides).toBe(1);
+      expect(report.openEntries).toEqual([
+        jasmine.objectContaining({kind: 'RIDE', key: 'r2', name: 'huber, maier', tourId: 'extra', from: t(12)}),
+      ]);
+    });
+
+    it('does not flag open member entries of an extra car tour', () => {
+      const open: Tour = {...extra, members: [{id: 'e1', personId: 'huber', role: 'DRIVER', from: t(6)}]};
+      expect(yearReport(2027, [open], [], persons).openEntries).toEqual([]);
+    });
+
+    it('counts overlap with a shift of the same person only once', () => {
+      const shift = endTour(dayTour(), t(12)); // huber 06:00-12:00
+      const rides = [extraRide('r1', t(11), t(14), ['huber'])];
+      expect(row(yearReport(2027, [shift, extra], rides, persons), 'huber').hours).toBe(8);
+    });
+  });
+
+  describe('ambulance shifts', () => {
+    const seefest = (crew: string[]): Ride => ({
+      id: 'amb', kind: 'AMBULANCE', event: 'Seefest Strobl', alarmAt: t(14), returnedAt: t(23),
+      vehicleIds: ['44.301', '45.201'], crew: crew.map((personId, i) => ({personId, role: i ? 'MEDIC' : 'Fußtrupp'})), assistances: 3,
+    });
+
+    it('counts start to end for every crew member and one ride each', () => {
+      const report = yearReport(2027, [], [seefest(['huber', 'eder'])], persons);
+      expect(row(report, 'huber')).toEqual(jasmine.objectContaining({hours: 9, rides: 1}));
+      expect(row(report, 'eder')).toEqual(jasmine.objectContaining({hours: 9, rides: 1}));
+    });
+
+    it('merges with an overlapping shift of the same person', () => {
+      const shift = endTour(dayTour(), t(18)); // huber 06:00-18:00
+      expect(row(yearReport(2027, [shift], [seefest(['huber'])], persons), 'huber').hours).toBe(17);
+    });
+
+    it('lists a person whose only activity is an ambulance shift', () => {
+      const report = yearReport(2027, [], [seefest(['guest'])], persons);
+      expect(row(report, 'guest')).toEqual(jasmine.objectContaining({hours: 9, rides: 1, active: false}));
+    });
+  });
 });
+

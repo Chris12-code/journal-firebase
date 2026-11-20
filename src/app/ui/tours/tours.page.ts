@@ -8,6 +8,7 @@ import {Clock} from '../../application/clock';
 import {JournalService} from '../../application/journal.service';
 import {MasterDataService} from '../../application/master-data.service';
 import {CrewMember, ROLE_LABELS, Shift, SHIFT_LABELS, Tour} from '../../domain/model';
+import {PlannedSlot, SlotStatus} from '../../domain/shift-plan';
 import {isActive, tourEnd} from '../../domain/tour';
 import {formatTime} from '../shared/datetime';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
@@ -24,8 +25,36 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
     <div class="page">
       <div class="page-header">
         <h2>Dienstmannschaft</h2>
+        <button mat-stroked-button (click)="startExtra()"><mat-icon>add_road</mat-icon> Zusatzfahrzeug</button>
         <button mat-flat-button (click)="startTour()"><mat-icon>add</mat-icon> Tour beginnen</button>
       </div>
+
+      <section class="plan">
+        <h3>Geplante Dienste</h3>
+        <table class="slots">
+          <tbody>
+            @for (v of journal.plannedSlots(); track v.slot.key) {
+              <tr [attr.data-slot]="v.slot.key" [class]="'status-' + v.status">
+                <td class="when">{{ slotDay(v.slot) }} · {{ shiftLabels[v.slot.shift] }}</td>
+                <td class="what">{{ v.slot.vehicleType }} {{ v.slot.vehicleId }}</td>
+                <td class="times">{{ slotTimes(v.slot) }}</td>
+                <td class="state">
+                  <span class="status">{{ statusLabels[v.status] }}</span>
+                  @if (v.tour) { <span class="muted"> · {{ crewNames(v.tour) }}</span> }
+                  @if (v.slot.note) { <div class="note muted">{{ v.slot.note }}</div> }
+                </td>
+                <td class="row-actions">
+                  @if (v.status !== 'OCCUPIED') {
+                    <button mat-button (click)="occupy(v.slot)" [attr.aria-label]="'Besetzen ' + v.slot.key">Besetzen</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td class="muted">Keine geplanten Dienste im Zeitraum.</td></tr>
+            }
+          </tbody>
+        </table>
+      </section>
 
       @for (group of groups(); track group.shift) {
         <h3>{{ shiftLabels[group.shift] }}</h3>
@@ -86,6 +115,15 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
   `,
   styles: `
     .tour { margin-bottom: 16px; }
+    .plan { margin-bottom: 24px; }
+    table.slots { width: 100%; border-collapse: collapse; background: #fff; }
+    table.slots td { padding: 6px 8px; border-bottom: 1px solid rgba(0,0,0,.08); vertical-align: top; }
+    table.slots .when { white-space: nowrap; }
+    table.slots .status { font-weight: 500; }
+    tr.status-OCCUPIED .status { color: #1b5e20; }
+    tr.status-UNOCCUPIED .status { color: #b00020; }
+    tr.status-UPCOMING .status { color: rgba(0,0,0,.6); }
+    .note { font-size: 12px; }
     .status { font-weight: 500; }
     .status.active { color: #1b5e20; }
     table.crew { width: 100%; border-collapse: collapse; margin-top: 8px; }
@@ -96,7 +134,7 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
   `,
 })
 export class ToursPage {
-  private readonly journal = inject(JournalService);
+  protected readonly journal = inject(JournalService);
   protected readonly md = inject(MasterDataService);
   private readonly clock = inject(Clock);
   private readonly dialog = inject(MatDialog);
@@ -104,6 +142,12 @@ export class ToursPage {
 
   protected readonly shiftLabels = SHIFT_LABELS;
   protected readonly roleLabels = ROLE_LABELS;
+
+  protected readonly statusLabels: Record<SlotStatus, string> = {
+    OCCUPIED: 'besetzt',
+    UPCOMING: 'geplant',
+    UNOCCUPIED: 'nicht besetzt',
+  };
 
   protected readonly groups = computed(() =>
     (['DAY', 'NIGHT'] as Shift[]).map(shift => ({shift, tours: this.journal.tours().filter(t => t.shift === shift)})),
@@ -118,6 +162,41 @@ export class ToursPage {
 
   protected warnings(tour: Tour): string[] {
     return describeWarnings(this.journal.warningsFor(tour), this.journal.tours(), this.md);
+  }
+
+  /** "Heute" / "Morgen" / "Gestern" / "Mi 03.03." for the service date of a slot. */
+  protected slotDay(slot: PlannedSlot): string {
+    const today = this.clock.now();
+    const day = new Date(slot.start.getFullYear(), slot.start.getMonth(), slot.start.getDate());
+    const diff = Math.round((day.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86_400_000);
+    if (diff === 0) return 'Heute';
+    if (diff === 1) return 'Morgen';
+    if (diff === -1) return 'Gestern';
+    return day.toLocaleDateString('de-AT', {weekday: 'short', day: '2-digit', month: '2-digit'});
+  }
+
+  protected slotTimes(slot: PlannedSlot): string {
+    return `${formatTime(slot.start, slot.start)}–${formatTime(slot.end, slot.start)}`;
+  }
+
+  protected crewNames(tour: Tour): string {
+    return tour.members.filter(m => !m.to).map(m => this.md.personName(m.personId)).join(', ') || 'beendet';
+  }
+
+  protected occupy(slot: PlannedSlot): void {
+    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {
+      data: {kind: 'SHIFT', slot},
+      width: '560px',
+      maxWidth: '95vw',
+    });
+  }
+
+  protected startExtra(): void {
+    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {
+      data: {kind: 'EXTRA'},
+      width: '560px',
+      maxWidth: '95vw',
+    });
   }
 
   protected startTour(): void {

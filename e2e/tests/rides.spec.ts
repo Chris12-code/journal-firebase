@@ -97,3 +97,25 @@ test('ride: any other vehicle number can be entered', async ({page}) => {
   await expect(ride).toBeHidden();
   await expect(page.locator('table.rides tbody tr').first()).toContainText('99.123');
 });
+
+test('ride: additional resources from suggestions and free text', async ({page}) => {
+  await loginAs(page);
+  await page.getByRole('button', {name: /Neue Fahrt/}).click();
+  const ride = dialog(page);
+  await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toHaveValue('44.201');
+
+  const resources = ride.getByPlaceholder('z. B. Polizei');
+  await resources.fill('Notarzthub');
+  await page.getByRole('option', {name: 'Notarzthubschrauber'}).click();
+  await resources.fill('Rotes Kreuz Bad Ischl');
+  await resources.press('Enter');
+  // A suggestion already chosen is not offered again, a duplicate is ignored
+  await resources.fill('notarzthubschrauber');
+  await resources.press('Enter');
+  await expect(ride.locator('mat-chip-row')).toHaveCount(2);
+
+  await choose(ride, 'Art', 'NA');
+  await ride.getByRole('button', {name: 'Speichern'}).click();
+  await expect(ride).toBeHidden();
+  await expect(page.locator('table.rides tbody tr').first()).toContainText('Notarzthubschrauber, Rotes Kreuz Bad Ischl');
+});

@@ -9,7 +9,7 @@ const flush = () => new Promise(r => setTimeout(r));
 
 const ride = (tourId: string, alarmAt: Date): Ride => ({
   tourId,
-  vehicleId: '44.201',
+  vehicleIds: ['44.201'],
   alarmAt,
   crew: [{personId: 'huber', role: 'DRIVER'}],
   type: 'RD',
@@ -153,9 +153,9 @@ describe('JournalService', () => {
     it('validates and saves a ride on another vehicle without touching the tour', async () => {
       await fx.tours.save(dayTour());
       const tour = journal.tours()[0];
-      const result = await journal.saveRide({...journal.prefillRide(tour, t(9)), vehicleId: '80.103', type: 'KT'});
+      const result = await journal.saveRide({...journal.prefillRide(tour, t(9)), vehicleIds: ['44.301'], type: 'KT'});
       expect(result.ok).toBeTrue();
-      expect(journal.rides()[0].vehicleId).toBe('80.103');
+      expect(journal.rides()[0].vehicleIds).toEqual(['44.301']);
       expect(journal.tours()[0].homeVehicleId).toBe('44.201');
     });
 
@@ -170,4 +170,41 @@ describe('JournalService', () => {
       expect(journal.rides()).toEqual([]);
     });
   });
+
+  describe('planned slots', () => {
+    beforeEach(login);
+
+    it('lists the slots of the window with status (Wednesday 19:00)', () => {
+      const views = journal.plannedSlots().map(v => `${v.slot.key} ${v.status}`);
+      // window: 20 h back (Tue 23:00) to 24 h ahead (Thu 19:00)
+      expect(views).toEqual([
+        '2027-03-02|NIGHT|44.201 UNOCCUPIED',
+        '2027-03-03|DAY|44.301 UNOCCUPIED',
+        '2027-03-03|DAY|20.410 UNOCCUPIED',
+        '2027-03-03|DAY|44.201 UNOCCUPIED',
+        '2027-03-03|NIGHT|44.201 UNOCCUPIED',
+        '2027-03-04|DAY|44.301 UPCOMING',
+        '2027-03-04|DAY|20.410 UPCOMING',
+        '2027-03-04|DAY|44.201 UPCOMING',
+      ]);
+    });
+
+    it('marks a slot occupied once a tour is started from it and finds the slot of the tour', async () => {
+      const result = await journal.startTour({
+        kind: 'SHIFT', slotKey: '2027-03-03|NIGHT|44.201', shift: 'NIGHT', homeVehicleId: '44.201', at: t(19),
+        crew: [{personId: 'beer', role: 'DRIVER'}],
+      });
+      expect(result.ok).toBeTrue();
+      const view = journal.plannedSlots().find(v => v.slot.key === '2027-03-03|NIGHT|44.201')!;
+      expect(view.status).toBe('OCCUPIED');
+      expect(journal.slotOf(view.tour!)?.end).toEqual(t(6, 0, 1));
+    });
+
+    it('starts an extra car tour that occupies no slot', async () => {
+      await journal.startTour({kind: 'EXTRA', shift: 'DAY', homeVehicleId: '44.301', at: t(18), crew: [{personId: 'eder', role: 'DRIVER'}]});
+      expect(journal.tours()[0].kind).toBe('EXTRA');
+      expect(journal.plannedSlots().some(v => v.status === 'OCCUPIED')).toBeFalse();
+    });
+  });
 });
+

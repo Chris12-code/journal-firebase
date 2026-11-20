@@ -1,5 +1,6 @@
 import {DocumentData, Timestamp} from 'firebase/firestore';
 import {Audit, CrewMember, Person, Ride, RideCrewEntry, Tour, Vehicle, VehicleType} from '../domain/model';
+import {normalizeResources} from '../domain/ride';
 import {tourEnd, tourStart} from '../domain/tour';
 
 // The only place that knows the Firestore document shapes (design D3).
@@ -49,12 +50,23 @@ export function docToTour(id: string, data: DocumentData): Tour {
     const to = toDate(m['to']);
     return to ? {...member, to} : member;
   });
-  return {id, shift: data['shift'], homeVehicleId: optional(data['homeVehicleId']), members, audit: docToAudit(data)};
+  const tour: Tour = {
+    id,
+    kind: data['kind'] === 'EXTRA' ? 'EXTRA' : 'SHIFT',
+    shift: data['shift'],
+    homeVehicleId: optional(data['homeVehicleId']),
+    members,
+    audit: docToAudit(data),
+  };
+  const slotKey = optional<string>(data['slotKey']);
+  return slotKey ? {...tour, slotKey} : tour;
 }
 
 /** Tour fields to store, without author stamps. `start`/`end` are derived for querying only. */
 export function tourToDoc(tour: Tour): DocumentData {
   return {
+    kind: tour.kind ?? 'SHIFT',
+    slotKey: orNull(tour.slotKey),
     shift: tour.shift,
     homeVehicleId: orNull(tour.homeVehicleId),
     members: tour.members.map(m => ({
@@ -71,10 +83,15 @@ export function tourToDoc(tour: Tour): DocumentData {
 
 export function docToRide(id: string, data: DocumentData): Ride {
   const crew: RideCrewEntry[] = (data['crew'] ?? []).map((c: DocumentData) => ({personId: c['personId'], role: c['role']}));
+  // Legacy documents had a single `vehicleId`.
+  const vehicleIds: string[] = Array.isArray(data['vehicleIds'])
+    ? data['vehicleIds'].filter((v: unknown) => typeof v === 'string' && v)
+    : data['vehicleId'] ? [data['vehicleId']] : [];
   return {
     id,
-    tourId: data['tourId'],
-    vehicleId: data['vehicleId'],
+    kind: data['kind'] === 'AMBULANCE' ? 'AMBULANCE' : 'TRANSPORT',
+    tourId: optional(data['tourId']),
+    vehicleIds,
     alarmAt: toDate(data['alarmAt'])!,
     returnedAt: toDate(data['returnedAt']),
     crew,
@@ -83,6 +100,9 @@ export function docToRide(id: string, data: DocumentData): Ride {
     patient: optional(data['patient']),
     pickup: optional(data['pickup']),
     destination: optional(data['destination']),
+    event: optional(data['event']),
+    assistances: typeof data['assistances'] === 'number' ? data['assistances'] : undefined,
+    resources: Array.isArray(data['resources']) ? data['resources'].filter((r: unknown) => typeof r === 'string') : [],
     audit: docToAudit(data),
   };
 }
@@ -90,8 +110,9 @@ export function docToRide(id: string, data: DocumentData): Ride {
 /** Ride fields to store, without author stamps. */
 export function rideToDoc(ride: Ride): DocumentData {
   return {
-    tourId: ride.tourId,
-    vehicleId: ride.vehicleId,
+    kind: ride.kind ?? 'TRANSPORT',
+    tourId: orNull(ride.tourId),
+    vehicleIds: ride.vehicleIds.map(v => v.trim()).filter(Boolean),
     alarmAt: toTimestamp(ride.alarmAt),
     returnedAt: toTimestamp(ride.returnedAt),
     crew: ride.crew.map(c => ({personId: c.personId, role: c.role})),
@@ -100,5 +121,8 @@ export function rideToDoc(ride: Ride): DocumentData {
     patient: orNull(ride.patient),
     pickup: orNull(ride.pickup),
     destination: orNull(ride.destination),
+    event: orNull(ride.event),
+    assistances: ride.assistances ?? null,
+    resources: normalizeResources(ride.resources),
   };
 }

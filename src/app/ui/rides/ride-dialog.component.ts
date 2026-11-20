@@ -17,6 +17,8 @@ import {
   RIDE_TYPES,
   RideCategory,
   RideType,
+  RESOURCE_SUGGESTIONS,
+  CrewPosition,
   Role,
   ROLE_LABELS,
   ROLES,
@@ -24,6 +26,7 @@ import {
 } from '../../domain/model';
 import {newId} from '../../domain/tour';
 import {normalizeVehicleNumber} from '../../domain/vehicles';
+import {ChipListInputComponent, ChipOption} from '../shared/chip-list-input.component';
 import {fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {tourOptionLabel} from '../tours/tour-text';
@@ -36,13 +39,13 @@ export interface RideDialogData {
 interface CrewRow {
   key: string;
   personId: string;
-  role: Role;
+  role: CrewPosition;
 }
 
 /** Logs or edits a ride (spec rides): tour, vehicle actually used, crew snapshot and classification. */
 @Component({
   selector: 'app-ride-dialog',
-  imports: [FormsModule, MatAutocompleteModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
+  imports: [ChipListInputComponent, FormsModule, MatAutocompleteModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ isNew ? 'Neue Fahrt' : 'Fahrt bearbeiten' }}</h2>
@@ -147,6 +150,13 @@ interface CrewRow {
         </mat-form-field>
       </div>
 
+      <app-chip-list-input
+        label="Weitere Kräfte vor Ort"
+        inputPlaceholder="z. B. Polizei"
+        [options]="resourceOptions"
+        [(values)]="resources"
+      />
+
       @if (error()) {
         <p class="error-text">{{ error() }}</p>
       }
@@ -176,11 +186,13 @@ export class RideDialogComponent implements OnInit {
   protected readonly patients = PATIENT_TYPES;
 
   protected readonly isNew = !this.data.ride;
+  protected readonly resourceOptions: ChipOption[] = RESOURCE_SUGGESTIONS.map(r => ({value: r, label: r}));
+  protected readonly resources = signal<string[]>(this.data.ride?.resources ?? []);
   protected alarmAt = toLocalInput(this.data.ride?.alarmAt ?? nowMinute());
   protected returnedAt = toLocalInput(this.data.ride?.returnedAt);
   protected tourId = this.data.ride?.tourId ?? '';
   /** Free-text vehicle number; a signal so the suggestions stay stable between change detection runs. */
-  protected readonly vehicle = signal(this.data.ride?.vehicleId ?? '');
+  protected readonly vehicle = signal(this.data.ride?.vehicleIds[0] ?? '');
   protected readonly vehicleSuggestions = computed(() => this.md.suggestVehicles(this.vehicle()));
   protected crew: CrewRow[] = (this.data.ride?.crew ?? []).map(c => ({key: newId(), ...c}));
   protected crewTouched = !this.isNew;
@@ -266,7 +278,7 @@ export class RideDialogComponent implements OnInit {
     const at = fromLocalInput(this.alarmAt);
     if (!tour || !at) return;
     const prefill = this.journal.prefillRide(tour, at);
-    this.vehicle.set(prefill.vehicleId);
+    this.vehicle.set(prefill.vehicleIds[0] ?? '');
     this.crew = prefill.crew.map(c => ({key: newId(), ...c}));
   }
 
@@ -285,7 +297,9 @@ export class RideDialogComponent implements OnInit {
       id: this.data.ride?.id,
       audit: this.data.ride?.audit,
       tourId: this.tourId,
-      vehicleId: normalizeVehicleNumber(this.vehicle()),
+      kind: 'TRANSPORT',
+      vehicleIds: normalizeVehicleNumber(this.vehicle()) ? [normalizeVehicleNumber(this.vehicle())] : [],
+      resources: this.resources(),
       alarmAt: fromLocalInput(this.alarmAt) ?? new Date(NaN),
       returnedAt: fromLocalInput(this.returnedAt),
       crew: this.crew.filter(c => !!c.personId).map(({personId, role}) => ({personId, role})),

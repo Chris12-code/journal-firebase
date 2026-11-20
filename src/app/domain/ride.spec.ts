@@ -1,11 +1,11 @@
-import {Ride} from './model';
-import {crewAt, prefillRide, toursActiveAt, validateRide} from './ride';
+import {positionLabel, Ride} from './model';
+import {crewAt, normalizeResources, prefillRide, toursActiveAt, validateRide} from './ride';
 import {endTour, replaceMember} from './tour';
 import {dayTour, nightTour, t} from './testing/fixtures';
 
 const validRide = (): Ride => ({
   tourId: 'day',
-  vehicleId: '44.201',
+  vehicleIds: ['44.201'],
   alarmAt: t(7, 12),
   crew: [{personId: 'huber', role: 'DRIVER'}],
   type: 'RD',
@@ -47,20 +47,20 @@ describe('ride rules', () => {
 
   describe('vehicle actually used', () => {
     it('pre-fills the home vehicle', () => {
-      expect(prefillRide(dayTour(), t(7)).vehicleId).toBe('44.201');
+      expect(prefillRide(dayTour(), t(7)).vehicleIds).toEqual(['44.201']);
     });
 
     it('keeps the tour unchanged when the ride uses another vehicle', () => {
       const tour = dayTour();
-      const ride: Ride = {...validRide(), ...prefillRide(tour, t(7)), vehicleId: '80.103', type: 'KT'};
+      const ride: Ride = {...validRide(), ...prefillRide(tour, t(7)), vehicleIds: ['44.301'], type: 'KT'};
       expect(validateRide(ride)).toEqual([]);
-      expect(ride.vehicleId).toBe('80.103');
+      expect(ride.vehicleIds).toEqual(['44.301']);
       expect(tour.homeVehicleId).toBe('44.201');
     });
 
     it('leaves the vehicle empty for a tour without home vehicle and requires a choice', () => {
       const prefill = prefillRide(nightTour(), t(19));
-      expect(prefill.vehicleId).toBe('');
+      expect(prefill.vehicleIds).toEqual([]);
       const errors = validateRide({...validRide(), ...prefill});
       expect(errors.map(e => e.code)).toEqual(['MISSING_VEHICLE']);
     });
@@ -100,5 +100,81 @@ describe('ride rules', () => {
     it('requires a ride type', () => {
       expect(validateRide({...validRide(), type: undefined}).map(e => e.code)).toEqual(['MISSING_TYPE']);
     });
+  });
+});
+
+describe('transport vehicles', () => {
+  const base = (): Ride => ({tourId: 'day', vehicleIds: ['44.201'], alarmAt: t(8), crew: [{personId: 'huber', role: 'DRIVER'}], type: 'RD'});
+
+  it('requires exactly one vehicle', () => {
+    expect(validateRide({...base(), vehicleIds: ['44.201', '44.301']}).map(e => e.code)).toEqual(['TOO_MANY_VEHICLES']);
+    expect(validateRide({...base(), vehicleIds: ['  ']}).map(e => e.code)).toEqual(['MISSING_VEHICLE']);
+  });
+
+  it('treats a ride without kind as a transport', () => {
+    expect(validateRide({...base(), tourId: undefined}).map(e => e.code)).toEqual(['MISSING_TOUR']);
+  });
+});
+
+describe('ambulance shifts', () => {
+  const seefest = (): Ride => ({
+    kind: 'AMBULANCE',
+    event: 'Seefest Strobl',
+    alarmAt: t(14),
+    returnedAt: t(23),
+    vehicleIds: ['44.301', '45.201'],
+    crew: [
+      {personId: 'a', role: 'DRIVER'},
+      {personId: 'b', role: 'TPF'},
+      {personId: 'c', role: 'MEDIC'},
+      {personId: 'd', role: 'LEAD'},
+      {personId: 'e', role: 'Fußtrupp'},
+    ],
+    assistances: 3,
+  });
+
+  it('accepts an event with two cars, five people and assistances, without tour and type', () => {
+    expect(validateRide(seefest())).toEqual([]);
+  });
+
+  it('accepts an ambulance shift without vehicles', () => {
+    expect(validateRide({...seefest(), vehicleIds: []})).toEqual([]);
+  });
+
+  it('requires the end time', () => {
+    expect(validateRide({...seefest(), returnedAt: undefined}).map(e => e.code)).toEqual(['MISSING_END']);
+  });
+
+  it('requires the end after the start', () => {
+    expect(validateRide({...seefest(), returnedAt: t(13)}).map(e => e.code)).toEqual(['INVALID_RANGE']);
+  });
+
+  it('rejects negative or fractional assistances', () => {
+    expect(validateRide({...seefest(), assistances: -1}).map(e => e.code)).toEqual(['INVALID_ASSISTANCES']);
+    expect(validateRide({...seefest(), assistances: 1.5}).map(e => e.code)).toEqual(['INVALID_ASSISTANCES']);
+    expect(validateRide({...seefest(), assistances: 0})).toEqual([]);
+  });
+
+  it('requires an event and must not reference a tour', () => {
+    expect(validateRide({...seefest(), event: ' '}).map(e => e.code)).toEqual(['MISSING_EVENT']);
+    expect(validateRide({...seefest(), tourId: 'day'}).map(e => e.code)).toEqual(['TOUR_ON_AMBULANCE']);
+  });
+});
+
+describe('positions', () => {
+  it('labels known positions and shows free text as entered', () => {
+    expect(['DRIVER', 'TPF', 'THIRD', 'MEDIC', 'LEAD', 'TRAINEE'].map(positionLabel)).toEqual([
+      'Fahrer', 'Transportführer', 'Dritter', 'Sanitäter', 'Einsatzleiter', 'Praktikant',
+    ]);
+    expect(positionLabel('Fußtrupp')).toBe('Fußtrupp');
+  });
+});
+
+describe('additional resources', () => {
+  it('trims, drops empty entries and removes duplicates', () => {
+    expect(normalizeResources([' Polizei ', 'Notarzthubschrauber', '', 'polizei', 'Rotes Kreuz Bad Ischl'])).toEqual([
+      'Polizei', 'Notarzthubschrauber', 'Rotes Kreuz Bad Ischl',
+    ]);
+    expect(normalizeResources(undefined)).toEqual([]);
   });
 });

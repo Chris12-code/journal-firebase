@@ -29,7 +29,7 @@ const newTour = (): Tour => {
 
 const newRide = (tourId: string, alarmAt: Date): Ride => ({
   tourId,
-  vehicleId: '80.103',
+  vehicleIds: ['44.301'],
   alarmAt,
   crew: [{personId: 'huber', role: 'DRIVER'}],
   type: 'RD',
@@ -125,6 +125,13 @@ describe('Firestore repositories (emulator)', () => {
       expect(await tours.firstTourStart()).toEqual(t(6, 0, -10));
     });
 
+    it('stores the tour kind and the planned slot link', async () => {
+      await tours.save({...newTour(), kind: 'SHIFT', slotKey: '2027-03-03|DAY|44.201'});
+      await tours.save({...newTour(), kind: 'EXTRA'});
+      const loaded = await tours.loadForPeriod(t(0), t(0, 0, 1));
+      expect(loaded.map(x => [x.kind, x.slotKey]).sort()).toEqual([['EXTRA', undefined], ['SHIFT', '2027-03-03|DAY|44.201']]);
+    });
+
     it('deletes a tour', async () => {
       const id = await tours.save(newTour());
       await tours.delete(id);
@@ -149,6 +156,27 @@ describe('Firestore repositories (emulator)', () => {
       await rides.save({...newRide('tour-1', t(7, 12)), id, returnedAt: t(8, 5)});
       const [ride] = await rides.loadBetween(t(0), t(0, 0, 1));
       expect(ride.returnedAt).toEqual(t(8, 5));
+    });
+
+    it('stores an ambulance shift without tour, with vehicles, positions, assistances and resources', async () => {
+      await rides.save({
+        kind: 'AMBULANCE',
+        event: 'Seefest Strobl',
+        alarmAt: t(14),
+        returnedAt: t(23),
+        vehicleIds: ['44.301', '45.201'],
+        crew: [{personId: 'huber', role: 'MEDIC'}, {personId: 'maier', role: 'Fußtrupp'}],
+        assistances: 3,
+        resources: ['Notarzthubschrauber', 'Polizei'],
+      });
+      const [ride] = await rides.loadBetween(t(0), t(0, 0, 1));
+      expect(ride.kind).toBe('AMBULANCE');
+      expect(ride.tourId).toBeUndefined();
+      expect(ride.vehicleIds).toEqual(['44.301', '45.201']);
+      expect(ride.crew.map(c => c.role)).toEqual(['MEDIC', 'Fußtrupp']);
+      expect(ride.assistances).toBe(3);
+      expect(ride.resources).toEqual(['Notarzthubschrauber', 'Polizei']);
+      expect(ride.audit?.createdBy).toBe(uid);
     });
 
     it('tells whether a tour has rides', async () => {

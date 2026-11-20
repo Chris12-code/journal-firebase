@@ -17,7 +17,7 @@ describe('ReportService', () => {
 
   it('computes the report for the selected year', async () => {
     await fx.tours.save(endTour(dayTour(), t(18)));
-    await fx.rides.save({tourId: 'day', vehicleId: '44.201', alarmAt: t(9), crew: [{personId: 'huber', role: 'DRIVER'}], type: 'RD'});
+    await fx.rides.save({tourId: 'day', vehicleIds: ['44.201'], alarmAt: t(9), crew: [{personId: 'huber', role: 'DRIVER'}], type: 'RD'});
 
     await service.load(2027);
     const report = service.report()!;

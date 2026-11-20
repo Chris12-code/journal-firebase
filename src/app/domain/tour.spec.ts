@@ -35,6 +35,17 @@ describe('tour rules', () => {
     });
   });
 
+  describe('tour kinds', () => {
+    it('accepts a shift tour linked to a planned slot and an extra car tour without slot', () => {
+      expect(validateTour({...dayTour(), kind: 'SHIFT', slotKey: '2027-03-03|DAY|44.201'})).toEqual([]);
+      expect(validateTour({...dayTour(), kind: 'EXTRA'})).toEqual([]);
+    });
+
+    it('rejects an extra car tour linked to a planned slot', () => {
+      expect(validateTour({...dayTour(), kind: 'EXTRA', slotKey: '2027-03-03|DAY|44.201'}).map(e => e.code)).toEqual(['SLOT_ON_EXTRA']);
+    });
+  });
+
   describe('crew members carry individual times', () => {
     it('rejects an end time before the start time', () => {
       const tour = endMember(dayTour(), 'd', t(5));

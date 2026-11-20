@@ -41,6 +41,32 @@ firebase deploy --only hosting     # App
 
 Bei Problemen: `firebase logout` und `firebase login`.
 
+## Dienstplan, Zusatzfahrzeug und Ambulanz
+
+**Geplante Dienste** (Seite *Dienstmannschaft*) ergeben sich aus dem Kalender:
+
+| Tag | Tagdienst | Nachtdienst (ab 19:00) |
+|---|---|---|
+| Werktag (Mo–Fr, kein Feiertag) | RTW 44.201 07:30–19:00, KTW 44.301 06:00–17:00, BTW 20.410 06:30–18:00 | RTW 44.201 |
+| Samstag, Sonntag, gesetzlicher Feiertag | RTW 44.201 07:00–19:00 | RTW 44.201 |
+
+- Der Nachtdienst endet um 06:00, wenn der Folgetag ein Werktag ist, sonst um 07:00.
+- An Werktagen deckt der KTW den RTW von 06:00 bis 07:30 ab.
+- Feiertage sind die 13 bundesweiten Feiertage (keine weiteren Tage).
+- **Besetzen** übernimmt Fahrzeug, Schicht und geplanten Beginn. **Tour beenden** schlägt das geplante Ende vor.
+  Für die Stunden zählen immer die tatsächlich eingetragenen Zeiten.
+
+**Zusatzfahrzeug**: Wenn der RTW unterwegs ist und weitere Personen ein freies Fahrzeug nehmen. Die Stunden zählen
+vom Beginn der ersten bis zum Ende der letzten Fahrt dieses Zusatzfahrzeugs – daher bei diesen Fahrten immer die
+Rückkehrzeit eintragen.
+
+**Ambulanz** (Seite *Fahrten* → *Ambulanz erfassen*): Veranstaltung, Beginn und Ende, beliebig viele Fahrzeuge
+(auch externe Nummern wie 45.201), Besatzung mit Positionen, Anzahl der Hilfeleistungen. Jede Person der Ambulanz
+bekommt die Zeit von Beginn bis Ende angerechnet, die Ambulanz zählt als eine Fahrt.
+
+**Weitere Kräfte vor Ort** (Notarzt, Notarzthubschrauber, Polizei, Feuerwehr, …) können bei jeder Fahrt und
+Ambulanz eingetragen werden – Vorschläge oder freier Text.
+
 ## Stammdaten pflegen (Firebase-Konsole)
 
 Personen und Fahrzeuge werden in der Firebase-Konsole gepflegt; die App liest sie nur

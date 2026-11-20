@@ -8,16 +8,21 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {JournalService} from '../../application/journal.service';
 import {MasterDataService} from '../../application/master-data.service';
-import {Person, Role, ROLE_LABELS, ROLES, Shift, SHIFT_LABELS, SHIFTS, Tour} from '../../domain/model';
+import {Person, Role, ROLE_LABELS, ROLES, Shift, SHIFT_LABELS, SHIFTS, Tour, TourKind} from '../../domain/model';
+import {PlannedSlot} from '../../domain/shift-plan';
 import {newId} from '../../domain/tour';
 import {normalizeVehicleNumber} from '../../domain/vehicles';
-import {fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
+import {formatTime, fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {describeWarnings, sortedMembers} from './tour-text';
 
 export interface TourDialogData {
   /** Existing tour to correct; omitted to start a new tour. */
   tour?: Tour;
+  /** Kind of a new tour (default SHIFT). */
+  kind?: TourKind;
+  /** Planned slot a new shift tour occupies; pre-fills shift, vehicle and start. */
+  slot?: PlannedSlot;
 }
 
 interface MemberRow {
@@ -37,7 +42,10 @@ interface MemberRow {
   imports: [FormsModule, MatAutocompleteModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h2 mat-dialog-title>{{ isNew ? 'Tour beginnen' : 'Tour korrigieren' }}</h2>
+    <h2 mat-dialog-title>{{ title }}</h2>
+    @if (data.slot; as slot) {
+      <p class="slot-info muted">Geplant: {{ slot.vehicleType }} {{ slot.vehicleId }} · {{ shiftLabels[slot.shift] }} · {{ planned(slot) }}</p>
+    }
     <mat-dialog-content>
       <div class="dialog-row">
         <mat-form-field>
@@ -132,7 +140,7 @@ interface MemberRow {
   `,
 })
 export class TourDialogComponent {
-  private readonly data = inject<TourDialogData>(MAT_DIALOG_DATA);
+  protected readonly data = inject<TourDialogData>(MAT_DIALOG_DATA);
   private readonly ref = inject(MatDialogRef<TourDialogComponent, string>);
   private readonly journal = inject(JournalService);
   protected readonly md = inject(MasterDataService);
@@ -143,6 +151,11 @@ export class TourDialogComponent {
   protected readonly roleLabels = ROLE_LABELS;
 
   protected readonly isNew = !this.data.tour;
+  private readonly kind: TourKind = this.data.tour?.kind ?? this.data.kind ?? 'SHIFT';
+  private readonly slotKey: string | undefined = this.data.tour ? this.data.tour.slotKey : this.data.slot?.key;
+  protected readonly title = !this.isNew
+    ? 'Tour korrigieren'
+    : this.kind === 'EXTRA' ? 'Zusatzfahrzeug' : this.data.slot ? 'Dienst besetzen' : 'Tour beginnen';
   protected shift: Shift;
   /** Free-text vehicle number; a signal so the suggestions stay stable between change detection runs. */
   protected readonly homeVehicle = signal('');
@@ -161,6 +174,12 @@ export class TourDialogComponent {
       this.rows = sortedMembers(tour).map(m => ({
         id: m.id, personId: m.personId, role: m.role, from: toLocalInput(m.from), to: toLocalInput(m.to),
       }));
+    } else if (this.data.slot) {
+      const slot = this.data.slot;
+      this.shift = slot.shift;
+      this.homeVehicle.set(slot.vehicleId);
+      this.start = toLocalInput(slot.start);
+      this.rows = ROLES.map(role => ({id: newId(), personId: '', role, from: this.start, to: ''}));
     } else {
       const now = nowMinute();
       this.shift = now.getHours() >= 6 && now.getHours() < 18 ? 'DAY' : 'NIGHT';
@@ -194,10 +213,17 @@ export class TourDialogComponent {
     this.rows = this.rows.filter(r => r !== row);
   }
 
+  protected planned(slot: PlannedSlot): string {
+    return `${formatTime(slot.start, slot.start)}–${formatTime(slot.end, slot.start)}`;
+  }
+
   private draft(): Tour {
     const rows = this.isNew ? this.rows.filter(r => !!r.personId) : this.rows;
+    const {slotKey: _ignored, ...base} = this.data.tour ?? {};
     return {
-      ...this.data.tour,
+      ...base,
+      kind: this.kind,
+      ...(this.slotKey ? {slotKey: this.slotKey} : {}),
       shift: this.shift,
       homeVehicleId: normalizeVehicleNumber(this.homeVehicle()) || undefined,
       members: rows.map(r => {

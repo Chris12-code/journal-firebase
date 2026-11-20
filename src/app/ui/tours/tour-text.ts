@@ -3,10 +3,10 @@ import {CrewMember, ROLES, SHIFT_LABELS, Tour} from '../../domain/model';
 import {OverlapWarning, tourStart} from '../../domain/tour';
 import {formatTime} from '../shared/datetime';
 
-/** "Tag · 44.201 (RTW)" / "Nacht · ohne Fahrzeug". */
+/** "Tag · 44.201 (RTW)" / "Nacht · ohne Fahrzeug" / "Zusatzfahrzeug · 44.301 (KTW)". */
 export function tourTitle(tour: Tour, md: MasterDataService): string {
   const vehicle = tour.homeVehicleId ? md.vehicleLabel(tour.homeVehicleId) : 'ohne Fahrzeug';
-  return `${SHIFT_LABELS[tour.shift]} · ${vehicle}`;
+  return `${tour.kind === 'EXTRA' ? 'Zusatzfahrzeug' : SHIFT_LABELS[tour.shift]} · ${vehicle}`;
 }
 
 /** "Tag · 44.201 (RTW) · ab 06:00" for pickers. */

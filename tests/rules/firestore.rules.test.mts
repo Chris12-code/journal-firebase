@@ -22,7 +22,7 @@ const stamps = (uid: string) => ({
 
 const ride = (uid: string) => ({
   tourId: 't1',
-  vehicleId: '44.201',
+  vehicleIds: ['44.201'],
   alarmAt: new Date(),
   returnedAt: null,
   crew: [{personId: '07414', role: 'DRIVER'}],

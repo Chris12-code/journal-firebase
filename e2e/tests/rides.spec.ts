@@ -16,12 +16,12 @@ test('ride: RTW crew uses the KTW, the tour stays unchanged', async ({page}) => 
   await page.getByRole('button', {name: /Neue Fahrt/}).click();
   const ride = dialog(page);
   await expect(ride.getByRole('combobox', {name: 'Tour'})).toContainText('Tag · 44.201 (RTW)');
-  await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toContainText('44.201 (RTW)');
+  await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toHaveValue('44.201');
   await expect(ride.getByRole('combobox', {name: 'Person 1'})).toContainText('Anders Anna');
   await expect(ride.getByRole('combobox', {name: 'Person 3'})).toContainText('Csar Clara');
 
   // Use the KTW instead and leave the third person at the station
-  await choose(ride, 'Fahrzeug', '80.103 (KTW)');
+  await choose(ride, 'Fahrzeug', '44.301 (KTW)');
   await ride.getByRole('button', {name: 'Entfernen Csar Clara'}).click();
   await choose(ride, 'Art', 'KT');
   await ride.getByLabel('Einsatzort').fill('Strobl');
@@ -30,7 +30,7 @@ test('ride: RTW crew uses the KTW, the tour stays unchanged', async ({page}) => 
   await expect(ride).toBeHidden();
 
   const row = page.locator('table.rides tbody tr').first();
-  await expect(row).toContainText('80.103 (KTW)');
+  await expect(row).toContainText('44.301 (KTW)');
   await expect(row).toContainText('KT');
   await expect(row).toContainText('Anders Anna, Berger Bernd');
   await expect(row).not.toContainText('Csar Clara');
@@ -65,7 +65,7 @@ test('ride: an invalid return time is refused', async ({page}) => {
   await loginAs(page);
   await page.getByRole('button', {name: /Neue Fahrt/}).click();
   const ride = dialog(page);
-  await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toContainText('44.201 (RTW)');
+  await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toHaveValue('44.201');
   const alarm = new Date(await ride.getByLabel('Alarmierung').inputValue());
   alarm.setMinutes(alarm.getMinutes() - 10);
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -73,4 +73,27 @@ test('ride: an invalid return time is refused', async ({page}) => {
   await choose(ride, 'Art', 'RD');
   await ride.getByRole('button', {name: 'Speichern'}).click();
   await expect(ride.getByText('Die Rückkehr muss nach der Alarmierung liegen.')).toBeVisible();
+});
+
+test('ride: any other vehicle number can be entered', async ({page}) => {
+  await loginAs(page);
+  await page.getByRole('button', {name: /Neue Fahrt/}).click();
+  const ride = dialog(page);
+  const vehicle = ride.getByRole('combobox', {name: 'Fahrzeug'});
+  await expect(vehicle).toHaveValue('44.201');
+
+  // The defaults are suggested ...
+  await vehicle.click();
+  await expect(page.getByRole('option', {name: '44.201 (RTW)'})).toBeVisible();
+  await expect(page.getByRole('option', {name: '44.301 (KTW)'})).toBeVisible();
+  await expect(page.getByRole('option', {name: '20.410 (BTW)'})).toBeVisible();
+
+  // ... but a replacement car with another number is accepted as typed
+  await vehicle.fill('99.123');
+  await expect(ride.getByText('Unbekannte Nummer – wird so übernommen.')).toBeVisible();
+  await vehicle.press('Tab');
+  await choose(ride, 'Art', 'RD');
+  await ride.getByRole('button', {name: 'Speichern'}).click();
+  await expect(ride).toBeHidden();
+  await expect(page.locator('table.rides tbody tr').first()).toContainText('99.123');
 });

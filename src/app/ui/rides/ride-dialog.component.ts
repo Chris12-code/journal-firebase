@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, OnInit, signal, untracked} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatIconModule} from '@angular/material/icon';
@@ -20,9 +21,9 @@ import {
   ROLE_LABELS,
   ROLES,
   Tour,
-  Vehicle,
 } from '../../domain/model';
 import {newId} from '../../domain/tour';
+import {normalizeVehicleNumber} from '../../domain/vehicles';
 import {fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {tourOptionLabel} from '../tours/tour-text';
@@ -41,7 +42,7 @@ interface CrewRow {
 /** Logs or edits a ride (spec rides): tour, vehicle actually used, crew snapshot and classification. */
 @Component({
   selector: 'app-ride-dialog',
-  imports: [FormsModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, MatAutocompleteModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ isNew ? 'Neue Fahrt' : 'Fahrt bearbeiten' }}</h2>
@@ -68,13 +69,15 @@ interface CrewRow {
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field class="full-width">
+      <mat-form-field class="full-width" floatLabel="always">
         <mat-label>Fahrzeug</mat-label>
-        <mat-select [(ngModel)]="vehicleId" name="vehicle">
-          @for (v of vehicleOptions(); track v.number) {
+        <input matInput [ngModel]="vehicle()" (ngModelChange)="vehicle.set($event)" name="vehicle" [matAutocomplete]="vehicleAuto" placeholder="z. B. 44.201">
+        <mat-autocomplete #vehicleAuto="matAutocomplete">
+          @for (v of vehicleSuggestions(); track v.number) {
             <mat-option [value]="v.number">{{ v.number }} ({{ v.type }})</mat-option>
           }
-        </mat-select>
+        </mat-autocomplete>
+        <mat-hint>{{ vehicleHint() }}</mat-hint>
       </mat-form-field>
 
       <fieldset class="crew">
@@ -176,7 +179,9 @@ export class RideDialogComponent implements OnInit {
   protected alarmAt = toLocalInput(this.data.ride?.alarmAt ?? nowMinute());
   protected returnedAt = toLocalInput(this.data.ride?.returnedAt);
   protected tourId = this.data.ride?.tourId ?? '';
-  protected vehicleId = this.data.ride?.vehicleId ?? '';
+  /** Free-text vehicle number; a signal so the suggestions stay stable between change detection runs. */
+  protected readonly vehicle = signal(this.data.ride?.vehicleId ?? '');
+  protected readonly vehicleSuggestions = computed(() => this.md.suggestVehicles(this.vehicle()));
   protected crew: CrewRow[] = (this.data.ride?.crew ?? []).map(c => ({key: newId(), ...c}));
   protected crewTouched = !this.isNew;
   protected type: RideType | undefined = this.data.ride?.type;
@@ -223,11 +228,9 @@ export class RideDialogComponent implements OnInit {
     return tourOptionLabel(tour, this.md);
   }
 
-  /** Active vehicles plus the current one, even if inactive. */
-  protected vehicleOptions(): Vehicle[] {
-    const current = this.md.vehicle(this.vehicleId);
-    const active = this.md.activeVehicles();
-    return current && !current.active ? [...active, current] : active;
+  protected vehicleHint(): string {
+    const number = normalizeVehicleNumber(this.vehicle());
+    return !number || this.md.vehicle(number) ? '' : 'Unbekannte Nummer – wird so übernommen.';
   }
 
   /** Active persons plus the selected one, even if inactive. */
@@ -263,7 +266,7 @@ export class RideDialogComponent implements OnInit {
     const at = fromLocalInput(this.alarmAt);
     if (!tour || !at) return;
     const prefill = this.journal.prefillRide(tour, at);
-    this.vehicleId = prefill.vehicleId;
+    this.vehicle.set(prefill.vehicleId);
     this.crew = prefill.crew.map(c => ({key: newId(), ...c}));
   }
 
@@ -282,7 +285,7 @@ export class RideDialogComponent implements OnInit {
       id: this.data.ride?.id,
       audit: this.data.ride?.audit,
       tourId: this.tourId,
-      vehicleId: this.vehicleId,
+      vehicleId: normalizeVehicleNumber(this.vehicle()),
       alarmAt: fromLocalInput(this.alarmAt) ?? new Date(NaN),
       returnedAt: fromLocalInput(this.returnedAt),
       crew: this.crew.filter(c => !!c.personId).map(({personId, role}) => ({personId, role})),

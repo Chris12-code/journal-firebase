@@ -93,6 +93,7 @@ Crew member IDs are generated on the client (`crypto.randomUUID()`), so individu
 
 - **Members are embedded in the tour document**, not stored in a subcollection. A tour has at most a handful of entries, changes are atomic, and one listener covers the whole tour.
 - **`start`/`end` on tours are denormalized** from the members by the domain on every save. They exist only for querying. Report math always uses `members`.
+- **Default vehicles** (44.201 RTW, 44.301 KTW, 20.410 BTW) are a domain constant merged with the stored `vehicles` (stored entries win, so the console can deactivate a default). Vehicle fields are free text with suggestions, because replacement cars must be recordable without first touching master data; `vehicleId` is therefore the plain vehicle number and may reference no document.
 - **Using business keys as document IDs** for master data means that a document created by hand in the console can't get a mismatched reference.
 - Times are stored as Firestore `Timestamp`. Mappers convert them to `Date`, and no other layer sees `Timestamp`.
 

@@ -17,8 +17,26 @@ The system SHALL read persons from the backend. Each person has an employee numb
 The system SHALL read vehicles from the backend. Each vehicle has a vehicle number (unique, used as identifier), a type (RTW, KTW or BTW) and an active flag.
 
 #### Scenario: Vehicle type shown
-- **WHEN** a ride references vehicle 80.103
+- **WHEN** a ride references vehicle 80.103 that is stored with type KTW
 - **THEN** the system displays it with its type KTW
+
+### Requirement: Default vehicles exist without master data
+The system SHALL know the vehicles 44.201 (RTW), 44.301 (KTW) and 20.410 (BTW) as active defaults, even when no vehicles are stored in the backend. A stored vehicle with the same number SHALL replace the default, for example to deactivate it.
+
+#### Scenario: Fresh installation
+- **WHEN** the backend contains no vehicle documents
+- **THEN** the vehicle suggestions offer 44.201 (RTW), 44.301 (KTW) and 20.410 (BTW)
+
+#### Scenario: Default deactivated in the console
+- **WHEN** the backend stores vehicle 20.410 with active set to false
+- **THEN** 20.410 is no longer suggested but is still displayed as 20.410 (BTW) on existing rides
+
+### Requirement: Any vehicle number can be entered
+Vehicle fields on tours and rides SHALL accept any vehicle number as free text and SHALL suggest the active known vehicles. A number without master data SHALL be stored and displayed as entered, without a type.
+
+#### Scenario: Replacement car
+- **WHEN** a user enters vehicle number 99.123, which is neither a default nor stored
+- **THEN** the system shows a hint that the number is unknown, stores the ride with vehicle 99.123 and displays 99.123 in the ride list
 
 ### Requirement: Master data is read-only in the app
 The app SHALL NOT create, modify or delete persons or vehicles. The backend SHALL reject such writes from app users.

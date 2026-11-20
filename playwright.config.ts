@@ -3,6 +3,9 @@ import {defineConfig, devices} from '@playwright/test';
 // Test code computes local times; keep it in the same zone as the browser.
 process.env['TZ'] = 'Europe/Vienna';
 
+/** Dev server port for e2e runs (against the emulators). */
+const E2E_PORT = 4300;
+
 export default defineConfig({
   testDir: 'e2e/tests',
   globalSetup: 'e2e/global-setup.ts',
@@ -10,7 +13,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: `http://localhost:${E2E_PORT}`,
     trace: 'on',
     screenshot: 'on',
   },
@@ -32,8 +35,9 @@ export default defineConfig({
       gracefulShutdown: {signal: 'SIGTERM', timeout: 15_000},
     },
     {
-      command: `${process.execPath} node_modules/.bin/ng serve --configuration=e2e`,
-      url: 'http://localhost:4200',
+      // Own port: never reuse a developer's `npm start` on 4200, which talks to the real Firebase project.
+      command: `${process.execPath} node_modules/.bin/ng serve --configuration=e2e --port ${E2E_PORT}`,
+      url: `http://localhost:${E2E_PORT}`,
       reuseExistingServer: !process.env['CI'],
       timeout: 120_000,
     },

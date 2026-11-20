@@ -1,4 +1,4 @@
-import {Locator, Page} from '@playwright/test';
+import {expect, Locator, Page} from '@playwright/test';
 
 /** Value for <input type="datetime-local"> today (+ day offset) at the given local time. */
 export function localInput(hours: number, minutes = 0, dayOffset = 0): string {
@@ -8,11 +8,14 @@ export function localInput(hours: number, minutes = 0, dayOffset = 0): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(hours)}:${pad(minutes)}`;
 }
 
-/** Picks an option of a Material select identified by its label. */
+/** Picks an option of a Material select or autocomplete identified by its label. */
 export async function choose(scope: Page | Locator, label: string, option: string | RegExp): Promise<void> {
   await scope.getByRole('combobox', {name: label, exact: true}).click();
   const page = 'page' in scope ? scope.page() : scope;
   await page.getByRole('option', {name: option, exact: typeof option === 'string'}).click();
+  // Wait until the panel and its transparent backdrop are gone; otherwise the next click is intercepted.
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expect(page.locator('.cdk-overlay-transparent-backdrop')).toHaveCount(0);
 }
 
 export function dialog(page: Page): Locator {

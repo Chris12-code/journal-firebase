@@ -39,7 +39,8 @@ Business rules belong in `domain/` as pure functions with unit tests. Firestore 
 - **Yearly report**: hours = union of a person's closed member intervals clipped to the year (local time);
   open entries are listed, not counted. Rides = rides in the year whose snapshot contains the person.
 - Persons and vehicles are read-only master data maintained in the Firebase console (doc ID = employee number /
-  vehicle number), deactivated instead of deleted.
+  vehicle number), deactivated instead of deleted. Default vehicles 44.201 (RTW), 44.301 (KTW), 20.410 (BTW)
+  are built in (`domain/vehicles.ts`, stored docs override them); vehicle fields accept any number as free text.
 
 ## Firestore collections
 
@@ -52,7 +53,7 @@ Business rules belong in `domain/` as pure functions with unit tests. Firestore 
 ## Commands
 
 - `npm start` – dev server on localhost:4200 (real Firebase project)
-- `npx ng serve --configuration=e2e` – dev server against the emulators (`firebase emulators:start --only auth,firestore`)
+- `npx ng serve --configuration=e2e --port 4300` – dev server against the emulators (e2e uses port 4300 so it never reuses `npm start` on 4200, which talks to the real project) (`firebase emulators:start --only auth,firestore`)
 - `npm run build` – production build to `dist/journal-firebase`
 - `npm run test:ci` – unit tests (headless Chrome, `TZ=Europe/Vienna`)
 - `npm run test:integration` – repository tests against the emulators (`*.integration.spec.ts`)

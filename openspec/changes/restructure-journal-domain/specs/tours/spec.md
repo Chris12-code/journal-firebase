@@ -76,7 +76,7 @@ When a member entry overlaps in time with another entry of the same person, in t
 - **THEN** the system shows a warning naming the conflicting tour and still lets the user save
 
 ### Requirement: Only active master data can be selected
-The person and home-vehicle pickers SHALL offer only active persons and active vehicles. Existing entries that reference inactive ones SHALL still be displayed.
+The person picker and the home-vehicle suggestions SHALL offer only active persons and active vehicles. The home vehicle MAY also be any other vehicle number entered as free text. Existing entries that reference inactive ones SHALL still be displayed.
 
 #### Scenario: Inactive person not offered
 - **WHEN** a user opens the person picker for a crew member

@@ -25,11 +25,11 @@ Every ride SHALL reference exactly one tour. When logging a ride, the system SHA
 - **THEN** both tours are offered for selection
 
 ### Requirement: Ride records the vehicle actually used
-Every ride SHALL record a vehicle. The vehicle SHALL be pre-filled with the selected tour's home vehicle and can be changed to any active vehicle without changing the tour.
+Every ride SHALL record a vehicle. The vehicle SHALL be pre-filled with the selected tour's home vehicle and can be changed to any other vehicle number without changing the tour.
 
 #### Scenario: RTW crew uses the KTW
-- **WHEN** a user logs a ride for a tour with home vehicle 44.201 (RTW) and changes the vehicle to 80.103 (KTW)
-- **THEN** the ride is stored with vehicle 80.103 and the tour's home vehicle stays 44.201
+- **WHEN** a user logs a ride for a tour with home vehicle 44.201 (RTW) and changes the vehicle to 44.301 (KTW)
+- **THEN** the ride is stored with vehicle 44.301 and the tour's home vehicle stays 44.201
 
 #### Scenario: Tour without home vehicle
 - **WHEN** a user logs a ride for a tour that has no home vehicle

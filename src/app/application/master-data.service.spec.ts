@@ -28,6 +28,7 @@ describe('MasterDataService', () => {
   it('loads nothing while logged out', async () => {
     await flush();
     expect(service.persons()).toEqual([]);
+    expect(service.vehicles().map(v => v.number)).toEqual(['44.201', '44.301', '20.410']);
     expect(fx.masterData.loads).toBe(0);
   });
 
@@ -45,7 +46,26 @@ describe('MasterDataService', () => {
     fx.auth.subject.next({uid: 'u1', email: null});
     await flush();
     expect(service.activePersons().map(p => p.name)).toEqual(['Aigner', 'Zeller']);
-    expect(service.activeVehicles().map(v => v.number)).toEqual(['44.201', '80.103']);
+    expect(service.activeVehicles().map(v => v.number)).toEqual(['20.410', '44.201', '44.301', '80.103']);
+  });
+
+  it('knows the default vehicles even without stored vehicles', async () => {
+    fx.masterData.vehicles = [];
+    fx.auth.subject.next({uid: 'u1', email: null});
+    await flush();
+    expect(service.vehicleLabel('44.201')).toBe('44.201 (RTW)');
+    expect(service.vehicleLabel('44.301')).toBe('44.301 (KTW)');
+    expect(service.vehicleLabel('20.410')).toBe('20.410 (BTW)');
+  });
+
+  it('suggests vehicles for free-text input and keeps unknown numbers', async () => {
+    fx.auth.subject.next({uid: 'u1', email: null});
+    await flush();
+    expect(service.suggestVehicles('').length).toBe(4);
+    expect(service.suggestVehicles('44.').map(v => v.number)).toEqual(['44.201', '44.301']);
+    expect(service.suggestVehicles('44.201').length).toBe(4);
+    expect(service.suggestVehicles('99.123')).toEqual([]);
+    expect(service.vehicleLabel('99.123')).toBe('99.123');
   });
 
   it('still resolves inactive entries for display', async () => {

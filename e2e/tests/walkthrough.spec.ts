@@ -71,7 +71,7 @@ test('walkthrough: a full day on the journal sheet adds up in the yearly report'
   await crewChange(page, day, 'Ersetzen Berger Bernd', at(4), 'Mitglied ersetzen', 'Doppler Daniel');
 
   // R2 on the KTW without the third person; then Clara leaves
-  await logRide(page, at(5), {vehicle: '80.103 (KTW)', removeCrew: 'Csar Clara', type: 'KT'});
+  await logRide(page, at(5), {vehicle: '44.301 (KTW)', removeCrew: 'Csar Clara', type: 'KT'});
   await page.getByRole('link', {name: /Dienstmannschaft/}).click();
   await crewChange(page, day, 'Austragen Csar Clara', at(6), 'Mitglied austragen');
 
@@ -94,7 +94,7 @@ test('walkthrough: a full day on the journal sheet adds up in the yearly report'
   const rows = page.locator('table.rides tbody tr');
   await expect(rows).toHaveCount(3);
   await expect(rows.nth(0)).toContainText('Anders Anna, Doppler Daniel');
-  await expect(rows.nth(1)).toContainText('80.103 (KTW)');
+  await expect(rows.nth(1)).toContainText('44.301 (KTW)');
   await expect(rows.nth(1)).toContainText('Anders Anna, Doppler Daniel');
   await expect(rows.nth(2)).toContainText('Anders Anna, Berger Bernd, Csar Clara');
 

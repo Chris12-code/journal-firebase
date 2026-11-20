@@ -1,5 +1,6 @@
-import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatIconModule} from '@angular/material/icon';
@@ -9,6 +10,7 @@ import {JournalService} from '../../application/journal.service';
 import {MasterDataService} from '../../application/master-data.service';
 import {Person, Role, ROLE_LABELS, ROLES, Shift, SHIFT_LABELS, SHIFTS, Tour} from '../../domain/model';
 import {newId} from '../../domain/tour';
+import {normalizeVehicleNumber} from '../../domain/vehicles';
 import {fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {describeWarnings, sortedMembers} from './tour-text';
@@ -32,7 +34,7 @@ interface MemberRow {
  */
 @Component({
   selector: 'app-tour-dialog',
-  imports: [FormsModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, MatAutocompleteModule, MatDialogModule, MatButtonModule, MatIconModule, MatInputModule, MatSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ isNew ? 'Tour beginnen' : 'Tour korrigieren' }}</h2>
@@ -46,14 +48,15 @@ interface MemberRow {
             }
           </mat-select>
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field floatLabel="always">
           <mat-label>Stammfahrzeug</mat-label>
-          <mat-select [(ngModel)]="homeVehicleId" name="vehicle">
-            <mat-option value="">ohne Fahrzeug</mat-option>
-            @for (v of vehicleOptions(); track v.number) {
+          <input matInput [ngModel]="homeVehicle()" (ngModelChange)="homeVehicle.set($event)" name="vehicle" [matAutocomplete]="vehicleAuto" placeholder="leer = ohne Fahrzeug">
+          <mat-autocomplete #vehicleAuto="matAutocomplete">
+            @for (v of vehicleSuggestions(); track v.number) {
               <mat-option [value]="v.number">{{ v.number }} ({{ v.type }})</mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
+          <mat-hint>{{ vehicleHint() }}</mat-hint>
         </mat-form-field>
       </div>
 
@@ -141,7 +144,9 @@ export class TourDialogComponent {
 
   protected readonly isNew = !this.data.tour;
   protected shift: Shift;
-  protected homeVehicleId: string;
+  /** Free-text vehicle number; a signal so the suggestions stay stable between change detection runs. */
+  protected readonly homeVehicle = signal('');
+  protected readonly vehicleSuggestions = computed(() => this.md.suggestVehicles(this.homeVehicle()));
   protected start = '';
   protected rows: MemberRow[];
 
@@ -152,24 +157,22 @@ export class TourDialogComponent {
     const tour = this.data.tour;
     if (tour) {
       this.shift = tour.shift;
-      this.homeVehicleId = tour.homeVehicleId ?? '';
+      this.homeVehicle.set(tour.homeVehicleId ?? '');
       this.rows = sortedMembers(tour).map(m => ({
         id: m.id, personId: m.personId, role: m.role, from: toLocalInput(m.from), to: toLocalInput(m.to),
       }));
     } else {
       const now = nowMinute();
       this.shift = now.getHours() >= 6 && now.getHours() < 18 ? 'DAY' : 'NIGHT';
-      this.homeVehicleId = '';
       this.start = toLocalInput(now);
       this.rows = ROLES.map(role => ({id: newId(), personId: '', role, from: this.start, to: ''}));
     }
   }
 
-  /** Active vehicles plus the current one, even if it has been deactivated since. */
-  protected vehicleOptions() {
-    const current = this.md.vehicle(this.homeVehicleId);
-    const active = this.md.activeVehicles();
-    return current && !current.active ? [...active, current] : active;
+  protected vehicleHint(): string {
+    const number = normalizeVehicleNumber(this.homeVehicle());
+    if (!number) return 'Ohne Fahrzeug – kann später bei jeder Fahrt gewählt werden.';
+    return this.md.vehicle(number) ? '' : 'Unbekannte Nummer – wird so übernommen.';
   }
 
   /** Active persons plus the currently selected one, even if inactive. */
@@ -196,7 +199,7 @@ export class TourDialogComponent {
     return {
       ...this.data.tour,
       shift: this.shift,
-      homeVehicleId: this.homeVehicleId || undefined,
+      homeVehicleId: normalizeVehicleNumber(this.homeVehicle()) || undefined,
       members: rows.map(r => {
         const to = fromLocalInput(r.to);
         const member = {id: r.id, personId: r.personId, role: r.role, from: fromLocalInput(r.from) ?? new Date(NaN)};

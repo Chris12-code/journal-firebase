@@ -14,7 +14,7 @@ Zum Entwickeln ohne echte Daten die Emulatoren verwenden:
 
 ```bash
 firebase emulators:start --only auth,firestore     # Terminal 1 (Emulator-UI: http://localhost:4000)
-npx ng serve --configuration=e2e                   # Terminal 2: App gegen die Emulatoren
+npx ng serve --configuration=e2e --port 4300       # Terminal 2: App gegen die Emulatoren (http://localhost:4300)
 ```
 
 Testbenutzer und Testdaten legt `npm run e2e` automatisch an (siehe `e2e/helpers/emulator.ts`).
@@ -55,7 +55,11 @@ Personen und Fahrzeuge werden in der Firebase-Konsole gepflegt; die App liest si
 | `email` | string | nein | `name@example.at` |
 | `active` | boolean | ja | `true` |
 
-**Fahrzeuge** – Sammlung `vehicles`, **Dokument-ID = Fahrzeugnummer** (z. B. `44.201`):
+**Fahrzeuge** – Sammlung `vehicles`, **Dokument-ID = Fahrzeugnummer** (z. B. `44.201`).
+Die App kennt bereits ohne Einträge die Standardfahrzeuge **44.201 (RTW)**, **44.301 (KTW)** und **20.410 (BTW)**.
+Einträge hier sind nur nötig für weitere Fahrzeuge oder um ein Standardfahrzeug zu überschreiben
+(z. B. `active: false`). In Touren und Fahrten kann außerdem jede andere Nummer eingetippt werden
+(z. B. ein Ersatzfahrzeug); sie wird dann ohne Typ gespeichert.
 
 | Feld | Typ | Pflicht | Beispiel |
 |---|---|---|---|

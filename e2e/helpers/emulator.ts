@@ -51,11 +51,11 @@ export const TEST_PERSONS = [
   {id: '10009', name: 'Zuletzt Zeno', active: false},
 ];
 
-export const TEST_VEHICLES = [
-  {id: '44.201', type: 'RTW', active: true},
-  {id: '80.103', type: 'KTW', active: true},
-  {id: '44.301', type: 'BTW', active: true},
-];
+/**
+ * No stored vehicles: the app's built-in defaults (44.201 RTW, 44.301 KTW, 20.410 BTW) must suffice.
+ * Add entries here only to test overrides of the defaults.
+ */
+export const TEST_VEHICLES: {id: string; type: string; active: boolean}[] = [];
 
 /** Resets Firestore and seeds persons and vehicles. */
 export async function seedMasterData(): Promise<void> {

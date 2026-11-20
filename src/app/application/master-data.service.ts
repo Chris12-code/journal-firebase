@@ -1,7 +1,8 @@
 import {computed, inject, Injectable} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {catchError, from, of, switchMap} from 'rxjs';
+import {catchError, from, map, of, switchMap} from 'rxjs';
 import {Person, Vehicle} from '../domain/model';
+import {withDefaultVehicles} from '../domain/vehicles';
 import {MasterDataRepository} from './ports';
 import {SessionService} from './session.service';
 
@@ -25,15 +26,17 @@ export class MasterDataService {
     {initialValue: [] as Person[]},
   );
 
+  /** Built-in default vehicles merged with the stored ones (stored entries win). */
   readonly vehicles = toSignal(
     this.session.user$.pipe(
       switchMap(u => (u ? from(this.repo.loadVehicles()) : of([]))),
+      map(stored => withDefaultVehicles(stored)),
       catchError(err => {
         console.error('Fahrzeuge konnten nicht geladen werden', err);
-        return of([] as Vehicle[]);
+        return of(withDefaultVehicles([]));
       }),
     ),
-    {initialValue: [] as Vehicle[]},
+    {initialValue: withDefaultVehicles([])},
   );
 
   /** Only active persons and vehicles are offered for new selections. */
@@ -55,6 +58,17 @@ export class MasterDataService {
   personName(id: string | undefined): string {
     if (!id) return '';
     return this.person(id)?.name ?? id;
+  }
+
+  /**
+   * Suggestions for a free-text vehicle field: active vehicles matching the typed text.
+   * When the text already is a known number (or empty), all active vehicles are offered.
+   */
+  suggestVehicles(text: string | undefined): Vehicle[] {
+    const q = (text ?? '').trim();
+    const active = this.activeVehicles();
+    if (!q || this.vehicle(q)) return active;
+    return active.filter(v => v.number.includes(q));
   }
 
   /** "44.201 (RTW)", also for inactive vehicles; falls back to the number. */

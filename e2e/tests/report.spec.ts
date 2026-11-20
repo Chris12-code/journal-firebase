@@ -48,7 +48,7 @@ test.beforeEach(async () => {
     ...stamp,
   });
   await putDoc('rides/r1', ride(jan(8), '44.201', ['10001', '10002']));
-  await putDoc('rides/r2', ride(jan(12), '80.103', ['10001', '10004'])); // other vehicle still counts
+  await putDoc('rides/r2', ride(jan(12), '44.301', ['10001', '10004'])); // other vehicle still counts
   await putDoc('rides/r3', ride(new Date(year - 1, 11, 31, 23, 0), '44.201', ['10001'])); // previous year
   await putDoc('rides/r4', ride(jan(9), '44.201', ['10009'])); // inactive person with activity
 });

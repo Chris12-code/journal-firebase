@@ -44,6 +44,12 @@
 
 - [x] 7.1 Run the full suite against the emulators (`ng test`, `npm run test:rules`, Playwright e2e), plus an end-to-end walkthrough: start the DAY tour, change crew, log rides (one on another vehicle), start the NIGHT tour while the DAY tour is in overtime, end both, then check the yearly report totals. Verify everything is green and the totals match the hand-calculated expectations.
 
+## 8. Default vehicles and free vehicle entry
+
+- [x] 8.1 Add the default vehicles 44.201 (RTW), 44.301 (KTW), 20.410 (BTW) as a domain constant merged with stored vehicles (stored entries win). Verify with unit tests for the merge, override/deactivation and number normalization.
+- [x] 8.2 Turn the home-vehicle and ride-vehicle fields into free-text inputs with suggestions of active vehicles and a hint for unknown numbers. Verify with a Playwright test that enters 99.123 and finds it in the ride list, and with the updated ride and walkthrough tests using 44.301 (KTW).
+- [x] 8.3 Stop seeding vehicles in the e2e emulator setup and run e2e on its own port (4300) so a running `npm start` against the real project is never reused. Verify the full e2e suite passes twice in a row.
+
 ## Workflow follow-up
 
 - Before go-live: create the production `persons` and `vehicles` documents in the Firebase console.

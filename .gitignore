@@ -10,3 +10,9 @@ dist/
 # Playwright output
 test-results/
 playwright-report/
+
+# Local AI / IDE tool setup
+.agents/
+.claude/
+.vibe/
+.mcp.json

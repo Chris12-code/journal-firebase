@@ -124,3 +124,10 @@ The system SHALL let a user start an extra car tour for people who take a free c
 #### Scenario: RTW out, second request
 - **WHEN** the RTW is on a ride and two people take the KTW for a transport
 - **THEN** a user starts an extra car tour on 44.301 with the two people and logs the transport for that tour
+
+### Requirement: Log a ride from an active tour
+Each active tour SHALL offer logging a ride for it. The ride dialog SHALL open with that tour preselected and its home vehicle and current crew prefilled.
+
+#### Scenario: Ride from the tour card
+- **WHEN** a user chooses "Fahrt erfassen" on the active DAY tour on 44.201
+- **THEN** the ride dialog opens with the DAY tour, vehicle 44.201 and the members on duty

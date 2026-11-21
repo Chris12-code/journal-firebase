@@ -87,6 +87,27 @@ export function endTour(tour: Tour, at: Date): Tour {
   return {...tour, members: tour.members.map(m => (m.to ? m : {...m, to: at}))};
 }
 
+/**
+ * Current for the daily view: starts before `now + windowMs` and is still active or ended at most
+ * `windowMs` ago. Active tours stay current, also in overtime.
+ */
+export function isCurrentTour(tour: Tour, now: Date, windowMs: number): boolean {
+  const start = tourStart(tour);
+  if (!start || start.getTime() >= now.getTime() + windowMs) return false;
+  if (isActive(tour)) return true;
+  return (tourEnd(tour)?.getTime() ?? 0) >= now.getTime() - windowMs;
+}
+
+/**
+ * Extends an ended tour to `at` when that lies after its end: the member entries that closed the tour
+ * (ending at the tour end) end at `at` instead. Active tours and earlier times leave the tour unchanged.
+ */
+export function extendTourEnd(tour: Tour, at: Date): Tour {
+  const end = tourEnd(tour);
+  if (!end || at.getTime() <= end.getTime()) return tour;
+  return {...tour, members: tour.members.map(m => (m.to?.getTime() === end.getTime() ? {...m, to: at} : m))};
+}
+
 /** Checks the rules that prevent saving. An empty list means the tour is valid. */
 export function validateTour(tour: Tour): ValidationError[] {
   const errors: ValidationError[] = [];

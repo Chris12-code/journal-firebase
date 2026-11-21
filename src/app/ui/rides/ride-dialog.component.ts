@@ -23,10 +23,10 @@ import {
   Tour,
 } from '../../domain/model';
 import {toursActiveAt} from '../../domain/ride';
-import {isActiveAt, newId, tourStart} from '../../domain/tour';
+import {isActiveAt, newId, tourEnd, tourStart} from '../../domain/tour';
 import {normalizeVehicleNumber} from '../../domain/vehicles';
 import {ChipListInputComponent, ChipOption} from '../shared/chip-list-input.component';
-import {nowMinute} from '../shared/datetime';
+import {formatTime, nowMinute} from '../shared/datetime';
 import {DateTimeFieldComponent} from '../shared/datetime-field.component';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {PersonFieldComponent} from '../shared/person-field.component';
@@ -94,6 +94,9 @@ const byStartDesc = (a: Tour, b: Tour) => (tourStart(b)?.getTime() ?? 0) - (tour
         </mat-form-field>
         @if (notActiveWarning()) {
           <p class="warning-text">{{ notActiveWarning() }}</p>
+        }
+        @if (extensionHint()) {
+          <p class="warning-text">{{ extensionHint() }}</p>
         }
 
         <mat-form-field floatLabel="always">
@@ -234,11 +237,17 @@ export class RideDialogComponent implements OnInit {
   /** Tours loaded on demand for an alarm time before the display window. */
   private readonly olderTours = signal<Tour[]>([]);
 
-  /** Every known tour, those active at the alarm time first; the others newest first. */
+  /** The ride's own tour when editing, also when it is no longer current (loaded on demand for old rides). */
+  private readonly ownTour = computed(() => {
+    const id = this.data.ride?.tourId;
+    return id ? (this.journal.tourById(id) ?? this.olderTours().find(t => t.id === id)) : undefined;
+  });
+
+  /** Current tours (as on the Dienstmannschaft page) plus the own tour; those active at the alarm time first. */
   protected readonly tourGroups = computed(() => {
     const byId = new Map<string, Tour>();
-    const own = this.journal.tourById(this.tourId());
-    for (const t of [...this.journal.tours(), ...this.olderTours(), ...(own ? [own] : [])]) {
+    const own = this.ownTour();
+    for (const t of [...this.journal.currentTours(), ...(own ? [own] : [])]) {
       if (t.id) byId.set(t.id, t);
     }
     const all = [...byId.values()];
@@ -254,6 +263,23 @@ export class RideDialogComponent implements OnInit {
     const tour = this.selectedTour();
     const at = this.alarm();
     return tour && at && !isActiveAt(tour, at) ? 'Die Tour war zur Alarmzeit nicht aktiv.' : '';
+  });
+
+  /** Hint when saving would move the end of the (ended) tour to this ride's end. */
+  protected readonly extensionHint = computed(() => {
+    const tour = this.selectedTour();
+    const end = this.returnedAt() ?? this.alarm();
+    if (!tour || !end) return '';
+    const extendedTo = this.journal.tourExtension({
+      kind: 'TRANSPORT',
+      tourId: tour.id,
+      alarmAt: this.alarm() ?? end,
+      returnedAt: this.returnedAt(),
+      vehicleIds: [],
+      crew: [],
+    });
+    const oldEnd = tourEnd(tour);
+    return extendedTo && oldEnd ? `Das Tour-Ende (${formatTime(oldEnd)}) wird auf ${formatTime(extendedTo)} verlängert.` : '';
   });
 
   protected readonly error = signal<string | null>(null);

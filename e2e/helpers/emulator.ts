@@ -108,3 +108,29 @@ export async function seedActiveDayTour(hoursAgo = 2, id = 'seed-day'): Promise<
   });
   return id;
 }
+
+/** Seeds an ended DAY tour with three members from `startHoursAgo` to `endHoursAgo` hours ago. Returns its id. */
+export async function seedEndedDayTour(opts: {startHoursAgo: number; endHoursAgo: number; id?: string; vehicle?: string}): Promise<string> {
+  const id = opts.id ?? 'seed-ended';
+  const at = (hoursAgo: number) => {
+    const d = new Date(Date.now() - hoursAgo * 3_600_000);
+    d.setSeconds(0, 0);
+    return d;
+  };
+  const from = at(opts.startHoursAgo);
+  const to = at(opts.endHoursAgo);
+  const stamp = {createdBy: 'seed', createdAt: new Date(), updatedBy: 'seed', updatedAt: new Date()};
+  await putDoc(`tours/${id}`, {
+    shift: 'DAY',
+    homeVehicleId: opts.vehicle ?? '44.201',
+    members: [
+      {id: 'm1', personId: '10001', role: 'DRIVER', from, to},
+      {id: 'm2', personId: '10002', role: 'TPF', from, to},
+      {id: 'm3', personId: '10003', role: 'THIRD', from, to},
+    ],
+    start: from,
+    end: to,
+    ...stamp,
+  });
+  return id;
+}

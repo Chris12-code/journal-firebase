@@ -5,11 +5,12 @@ import {CrewMember, Ride, Role, Shift, Tour, TourKind, ValidationError} from '..
 import {PlannedSlot, slotByKey, slotsBetween, SlotStatus, slotStatus} from '../domain/shift-plan';
 import {prefillRide, toursActiveAt, validateRide} from '../domain/ride';
 import * as rules from '../domain/tour';
-import {Clock, DISPLAY_HOURS, HOUR_MS} from './clock';
+import {Clock, CURRENT_HOURS, DISPLAY_HOURS, HOUR_MS} from './clock';
 import {RideRepository, TourRepository} from './ports';
 import {SessionService} from './session.service';
 
-export type Result = {ok: true; id: string} | {ok: false; errors: ValidationError[]};
+/** `tourExtendedTo` is set when saving a ride moved the end of its (ended) tour to the ride end. */
+export type Result = {ok: true; id: string; tourExtendedTo?: Date} | {ok: false; errors: ValidationError[]};
 
 export interface StartTourInput {
   kind?: TourKind;
@@ -19,9 +20,6 @@ export interface StartTourInput {
   at: Date;
   crew: {personId: string; role: Role}[];
 }
-
-/** How far ahead planned slots are shown. */
-export const PLAN_AHEAD_HOURS = 24;
 
 export interface PlannedSlotView {
   slot: PlannedSlot;
@@ -77,6 +75,12 @@ export class JournalService {
 
   readonly activeTours = computed(() => this.tours().filter(rules.isActive));
 
+  /** Tours of the Dienstmannschaft view and the ride dialog: active, ended or starting within CURRENT_HOURS. */
+  readonly currentTours = computed(() => {
+    const now = this.clock.now();
+    return this.tours().filter(t => rules.isCurrentTour(t, now, CURRENT_HOURS * HOUR_MS));
+  });
+
   /** Rides alarmed within the display window, newest first. */
   readonly rides = computed(() => {
     const since = this.windowStart().getTime();
@@ -86,16 +90,21 @@ export class JournalService {
   });
 
   /**
-   * Planned slots that are running, start within the next 24 hours or ended within the display window,
-   * each with its status and linked tour (spec shift-plan).
+   * Planned slots that are running, ended at most CURRENT_HOURS ago or start within CURRENT_HOURS, plus the
+   * slots of current tours (a long overtime keeps its slot), each with its status and linked tour (spec shift-plan).
    */
   readonly plannedSlots = computed<PlannedSlotView[]>(() => {
     const now = this.clock.now();
+    const window = CURRENT_HOURS * HOUR_MS;
+    const slots = slotsBetween(new Date(now.getTime() - window), new Date(now.getTime() + window));
+    for (const tour of this.currentTours()) {
+      const slot = slotByKey(tour.slotKey);
+      if (slot && !slots.some(s => s.key === slot.key)) slots.push(slot);
+    }
     const tours = this.loadedTours();
-    return slotsBetween(this.windowStart(), new Date(now.getTime() + PLAN_AHEAD_HOURS * HOUR_MS)).map(slot => ({
-      slot,
-      ...slotStatus(slot, tours, now),
-    }));
+    return slots
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .map(slot => ({slot, ...slotStatus(slot, tours, now)}));
   });
 
   /** The planned slot a tour is linked to, if any. */
@@ -184,10 +193,33 @@ export class JournalService {
     return prefillRide(tour, alarmAt);
   }
 
+  /**
+   * The new end of the ride's tour when saving the ride would extend it: a transport ending (return, else alarm)
+   * after the end of its already ended tour. Undefined when the tour stays as it is.
+   */
+  tourExtension(ride: Ride): Date | undefined {
+    const extended = this.extendedTour(ride);
+    return extended ? rules.tourEnd(extended) : undefined;
+  }
+
+  /** Saves the ride; a ride ending after its ended tour moves the tour end along (spec tours). */
   async saveRide(ride: Ride): Promise<Result> {
     const errors = validateRide(ride);
     if (errors.length) return {ok: false, errors};
-    return {ok: true, id: await this.rideRepo.save(ride)};
+    const extended = this.extendedTour(ride);
+    const id = await this.rideRepo.save(ride);
+    if (!extended) return {ok: true, id};
+    await this.tourRepo.save(extended);
+    return {ok: true, id, tourExtendedTo: rules.tourEnd(extended)};
+  }
+
+  private extendedTour(ride: Ride): Tour | undefined {
+    if (ride.kind === 'AMBULANCE') return undefined;
+    const tour = this.tourById(ride.tourId);
+    const end = ride.returnedAt ?? ride.alarmAt;
+    if (!tour || isNaN(end.getTime())) return undefined;
+    const extended = rules.extendTourEnd(tour, end);
+    return extended === tour ? undefined : extended;
   }
 
   async deleteRide(ride: Ride): Promise<void> {

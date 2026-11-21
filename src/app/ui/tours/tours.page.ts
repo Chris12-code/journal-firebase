@@ -53,7 +53,7 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
                 </td>
               </tr>
             } @empty {
-              <tr><td class="muted">Keine geplanten Dienste im Zeitraum.</td></tr>
+              <tr><td class="muted">Keine geplanten Dienste in den nächsten Stunden.</td></tr>
             }
           </tbody>
         </table>
@@ -112,7 +112,7 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
             </mat-card-actions>
           </mat-card>
         } @empty {
-          <p class="muted">Keine Touren.</p>
+          <p class="muted">Keine aktuellen Touren.</p>
         }
       }
     </div>
@@ -154,7 +154,7 @@ export class ToursPage {
   };
 
   protected readonly groups = computed(() =>
-    (['DAY', 'NIGHT'] as Shift[]).map(shift => ({shift, tours: this.journal.tours().filter(t => t.shift === shift)})),
+    (['DAY', 'NIGHT'] as Shift[]).map(shift => ({shift, tours: this.journal.currentTours().filter(t => t.shift === shift)})),
   );
 
   protected title = (tour: Tour) => tourTitle(tour, this.md);

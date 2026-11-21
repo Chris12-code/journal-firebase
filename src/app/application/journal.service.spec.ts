@@ -146,6 +146,18 @@ describe('JournalService', () => {
     });
   });
 
+  describe('current tours', () => {
+    beforeEach(login);
+
+    it('shows active tours and tours ended at most 4 h ago', async () => {
+      await fx.tours.save(nightTour()); // active
+      await fx.tours.save({...endTour(dayTour(), t(16)), id: 'recent'});
+      await fx.tours.save({...endTour(dayTour(), t(14, 30)), id: 'older'});
+      expect(journal.currentTours().map(x => x.id).sort()).toEqual(['night', 'recent']);
+      expect(journal.tours().length).toBe(3);
+    });
+  });
+
   describe('ride actions', () => {
     beforeEach(login);
 
@@ -177,6 +189,24 @@ describe('JournalService', () => {
       expect(journal.tours()[0].homeVehicleId).toBe('44.201');
     });
 
+    it('extends an ended tour to the return time of a later ride', async () => {
+      await fx.tours.save(endTour(dayTour(), t(18, 55)));
+      const tour = journal.tours()[0];
+      const late = {...journal.prefillRide(tour, t(18, 40)), type: 'RD' as const, returnedAt: t(19, 40)};
+      expect(journal.tourExtension(late)).toEqual(t(19, 40));
+      const result = await journal.saveRide(late);
+      expect(result).toEqual(jasmine.objectContaining({ok: true, tourExtendedTo: t(19, 40)}));
+      expect(journal.tours()[0].members.every(m => m.to?.getTime() === t(19, 40).getTime())).toBeTrue();
+    });
+
+    it('leaves the tour alone for a ride within it', async () => {
+      await fx.tours.save(endTour(dayTour(), t(18, 55)));
+      const tour = journal.tours()[0];
+      const result = await journal.saveRide({...journal.prefillRide(tour, t(17)), type: 'RD', returnedAt: t(18)});
+      expect(result.ok && result.tourExtendedTo).toBeUndefined();
+      expect(journal.tours()[0].members[0].to).toEqual(t(18, 55));
+    });
+
     it('refuses an invalid ride', async () => {
       const result = await journal.saveRide({...ride('day', t(9)), returnedAt: t(8)});
       expect(result).toEqual({ok: false, errors: [jasmine.objectContaining({code: 'INVALID_RANGE'})]});
@@ -192,19 +222,30 @@ describe('JournalService', () => {
   describe('planned slots', () => {
     beforeEach(login);
 
-    it('lists the slots of the window with status (Wednesday 19:00)', () => {
+    it('lists the slots running, ended within 4 h or starting within 4 h, with status (Wednesday 19:00)', () => {
       const views = journal.plannedSlots().map(v => `${v.slot.key} ${v.status}`);
-      // window: 20 h back (Tue 23:00) to 24 h ahead (Thu 19:00)
+      // window: 15:00 to 23:00 – last night (ended 06:00) and tomorrow's day slots (from 06:00) are left out
       expect(views).toEqual([
-        '2027-03-02|NIGHT|44.201 UNOCCUPIED',
         '2027-03-03|DAY|44.301 UNOCCUPIED',
         '2027-03-03|DAY|20.410 UNOCCUPIED',
         '2027-03-03|DAY|44.201 UNOCCUPIED',
         '2027-03-03|NIGHT|44.201 UNOCCUPIED',
-        '2027-03-04|DAY|44.301 UPCOMING',
-        '2027-03-04|DAY|20.410 UPCOMING',
-        '2027-03-04|DAY|44.201 UPCOMING',
       ]);
+    });
+
+    it('shows upcoming slots once they start within 4 h', () => {
+      fx.now.set(t(2, 30, 1)); // Thursday 02:30
+      const keys = journal.plannedSlots().map(v => `${v.slot.key} ${v.status}`);
+      expect(keys).toEqual(['2027-03-03|NIGHT|44.201 UNOCCUPIED', '2027-03-04|DAY|44.301 UPCOMING']);
+    });
+
+    it('keeps the slot of a tour in long overtime', async () => {
+      await journal.startTour({
+        kind: 'SHIFT', slotKey: '2027-03-03|DAY|44.301', shift: 'DAY', homeVehicleId: '44.301', at: t(6),
+        crew: [{personId: 'beer', role: 'DRIVER'}],
+      });
+      fx.now.set(t(22)); // KTW slot ended 17:00, more than 4 h ago, but the tour still runs
+      expect(journal.plannedSlots().map(v => v.slot.key)).toContain('2027-03-03|DAY|44.301');
     });
 
     it('marks a slot occupied once a tour is started from it and finds the slot of the tour', async () => {

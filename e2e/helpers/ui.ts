@@ -1,13 +1,5 @@
 import {expect, Locator, Page} from '@playwright/test';
 
-/** Value for <input type="datetime-local"> today (+ day offset) at the given local time. */
-export function localInput(hours: number, minutes = 0, dayOffset = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(hours)}:${pad(minutes)}`;
-}
-
 /** Picks an option of a Material select or autocomplete identified by its label. */
 export async function choose(scope: Page | Locator, label: string, option: string | RegExp): Promise<void> {
   await scope.getByRole('combobox', {name: label, exact: true}).click();
@@ -63,14 +55,6 @@ export async function readDateTime(scope: Page | Locator, label: string): Promis
 /** Asserts the point in time shown by an app-datetime-field. */
 export async function expectDateTime(scope: Page | Locator, label: string, d: Date): Promise<void> {
   await expect(dateTimeInput(scope, label)).toHaveValue(dateTimeText(d));
-}
-
-/** Today (+ day offset) at the given local time. */
-export function todayAt(hours: number, minutes = 0, dayOffset = 0): Date {
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
 }
 
 /** Confirms the Material confirm dialog (e.g. before deleting). */

@@ -4,8 +4,10 @@ import {
   addMember,
   endMember,
   endTour,
+  extendTourEnd,
   findOverlaps,
   isActive,
+  isCurrentTour,
   overlapWarnings,
   replaceMember,
   swapRoles,
@@ -114,6 +116,43 @@ describe('tour rules', () => {
       const tour = endTour(endMember(dayTour(), 'x', t(14)), t(18, 55));
       expect(tourEnd(tour)).toEqual(t(18, 55));
     });
+  });
+});
+
+describe('current tours (daily view window)', () => {
+  const H = 3_600_000;
+  const ended = endTour(dayTour(), t(18, 55)); // 06:00–18:55
+
+  it('keeps active tours, also in overtime', () => {
+    expect(isCurrentTour(dayTour(), t(23), 4 * H)).toBeTrue();
+  });
+
+  it('keeps tours ended at most the window ago', () => {
+    expect(isCurrentTour(ended, t(22, 55), 4 * H)).toBeTrue();
+    expect(isCurrentTour(ended, t(22, 56), 4 * H)).toBeFalse();
+  });
+
+  it('shows tours starting within the window only', () => {
+    expect(isCurrentTour(dayTour(), t(3), 4 * H)).toBeTrue(); // starts at 06:00, in 3 h
+    expect(isCurrentTour(dayTour(), t(1), 4 * H)).toBeFalse(); // starts in 5 h
+  });
+});
+
+describe('extending the tour end', () => {
+  // Third person left at 14:00, the rest ended the tour at 18:55
+  const ended = endTour(endMember(dayTour(), 'x', t(14)), t(18, 55));
+
+  it('moves the end of the members who closed the tour to a later ride end', () => {
+    const tour = extendTourEnd(ended, t(19, 40));
+    expect(tour.members.map(m => m.to)).toEqual([t(19, 40), t(19, 40), t(14)]);
+    expect(tourEnd(tour)).toEqual(t(19, 40));
+  });
+
+  it('leaves the tour unchanged for an earlier time or an active tour', () => {
+    expect(extendTourEnd(ended, t(18))).toBe(ended);
+    expect(extendTourEnd(ended, t(18, 55))).toBe(ended);
+    const active = dayTour();
+    expect(extendTourEnd(active, t(20))).toBe(active);
   });
 });
 

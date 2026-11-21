@@ -126,7 +126,10 @@ export class RidesPage {
     const returnedAt = new Date(Math.max(nowMinute().getTime(), ride.alarmAt.getTime() + 60_000));
     try {
       const result = await this.journal.saveRide({...ride, returnedAt});
-      if (result.ok) this.snack.open('Rückkehr eingetragen', undefined, {duration: 3000});
+      if (result.ok) {
+        const text = result.tourExtendedTo ? 'Rückkehr eingetragen, Tour-Ende verlängert' : 'Rückkehr eingetragen';
+        this.snack.open(text, undefined, {duration: 3000});
+      }
       else this.snack.open(joinErrors(result.errors), 'OK', {duration: 8000});
     } catch (err) {
       this.snack.open(backendErrorMessage(err), 'OK', {duration: 8000});

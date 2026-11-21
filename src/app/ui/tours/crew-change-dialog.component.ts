@@ -8,8 +8,10 @@ import {JournalService, Result} from '../../application/journal.service';
 import {MasterDataService} from '../../application/master-data.service';
 import {Role, ROLE_LABELS, ROLES, Tour} from '../../domain/model';
 import * as rules from '../../domain/tour';
-import {fromLocalInput, nowMinute, toLocalInput} from '../shared/datetime';
+import {nowMinute} from '../shared/datetime';
+import {DateTimeFieldComponent} from '../shared/datetime-field.component';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
+import {PersonFieldComponent} from '../shared/person-field.component';
 import {describeWarnings, tourTitle} from './tour-text';
 
 export type CrewChangeMode = 'add' | 'end' | 'replace' | 'swap' | 'endTour';
@@ -31,24 +33,18 @@ const TITLES: Record<CrewChangeMode, string> = {
 /** One crew change at a given time: add, end, replace, swap roles, or end the whole tour. */
 @Component({
   selector: 'app-crew-change-dialog',
-  imports: [FormsModule, MatDialogModule, MatButtonModule, MatInputModule, MatSelectModule],
+  imports: [DateTimeFieldComponent, FormsModule, MatButtonModule, MatDialogModule, MatInputModule, MatSelectModule, PersonFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ title }}</h2>
     <mat-dialog-content>
+      <div class="dialog-form">
       <p class="muted">{{ tourLabel }}</p>
 
       @switch (data.mode) {
         @case ('add') {
           <div class="dialog-row">
-            <mat-form-field>
-              <mat-label>Person</mat-label>
-              <mat-select [(ngModel)]="personId" name="person">
-                @for (p of md.activePersons(); track p.number) {
-                  <mat-option [value]="p.number">{{ p.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+            <app-person-field label="Person" [(personId)]="personId" [exclude]="onDuty" />
             <mat-form-field>
               <mat-label>Rolle</mat-label>
               <mat-select [(ngModel)]="role" name="role">
@@ -64,14 +60,7 @@ const TITLES: Record<CrewChangeMode, string> = {
         }
         @case ('replace') {
           <p>{{ memberLabel(data.memberId) }} wird ersetzt durch:</p>
-          <mat-form-field class="full-width">
-            <mat-label>Neue Person</mat-label>
-            <mat-select [(ngModel)]="personId" name="person">
-              @for (p of md.activePersons(); track p.number) {
-                <mat-option [value]="p.number">{{ p.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          <app-person-field label="Neue Person" [(personId)]="personId" [exclude]="onDuty" />
         }
         @case ('swap') {
           <div class="dialog-row">
@@ -98,10 +87,7 @@ const TITLES: Record<CrewChangeMode, string> = {
         }
       }
 
-      <mat-form-field class="full-width">
-        <mat-label>Zeitpunkt</mat-label>
-        <input matInput type="datetime-local" [(ngModel)]="at" name="at">
-      </mat-form-field>
+      <app-datetime-field label="Zeitpunkt" [(value)]="at" />
 
       @for (w of warnings(); track w) {
         <p class="warning-text">{{ w }}</p>
@@ -109,6 +95,7 @@ const TITLES: Record<CrewChangeMode, string> = {
       @if (error()) {
         <p class="error-text">{{ error() }}</p>
       }
+      </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close type="button">Abbrechen</button>
@@ -127,12 +114,14 @@ export class CrewChangeDialogComponent {
   protected readonly title = TITLES[this.data.mode];
   protected readonly tourLabel = tourTitle(this.data.tour, this.md);
   protected readonly activeMembers = this.data.tour.members.filter(m => !m.to);
+  /** Persons currently on duty in this tour; not offered again. */
+  protected readonly onDuty = this.activeMembers.map(m => m.personId);
 
   /** Ending a tour linked to a planned slot proposes the planned end; everything else proposes now. */
-  protected at = toLocalInput(
+  protected readonly at = signal<Date | undefined>(
     (this.data.mode === 'endTour' ? this.journal.slotOf(this.data.tour)?.end : undefined) ?? nowMinute(),
   );
-  protected personId = '';
+  protected readonly personId = signal('');
   protected role: Role = 'THIRD';
   protected swapA = this.activeMembers[0]?.id ?? '';
   protected swapB = this.activeMembers[1]?.id ?? '';
@@ -148,25 +137,27 @@ export class CrewChangeDialogComponent {
   /** The tour as it would look after the change, for overlap warnings. */
   private draft(at: Date): Tour | undefined {
     const {tour, memberId} = this.data;
-    if (this.data.mode === 'add' && this.personId) return rules.addMember(tour, {personId: this.personId, role: this.role, from: at});
-    if (this.data.mode === 'replace' && this.personId && memberId) return rules.replaceMember(tour, memberId, this.personId, at);
+    const personId = this.personId();
+    if (this.data.mode === 'add' && personId) return rules.addMember(tour, {personId, role: this.role, from: at});
+    if (this.data.mode === 'replace' && personId && memberId) return rules.replaceMember(tour, memberId, personId, at);
     return undefined;
   }
 
   protected warnings(): string[] {
-    const at = fromLocalInput(this.at);
+    const at = this.at();
     const draft = at && this.draft(at);
     return draft ? describeWarnings(this.journal.warningsFor(draft), this.journal.tours(), this.md) : [];
   }
 
   protected async confirm(): Promise<void> {
-    const at = fromLocalInput(this.at);
+    const at = this.at();
+    const personId = this.personId();
     if (!at) {
       this.error.set('Bitte einen Zeitpunkt angeben.');
       return;
     }
     const {tour, memberId, mode} = this.data;
-    if ((mode === 'add' || mode === 'replace') && !this.personId) {
+    if ((mode === 'add' || mode === 'replace') && !personId) {
       this.error.set('Bitte eine Person wählen.');
       return;
     }
@@ -181,13 +172,13 @@ export class CrewChangeDialogComponent {
       let result: Result;
       switch (mode) {
         case 'add':
-          result = await this.journal.addMember(tour, {personId: this.personId, role: this.role, from: at});
+          result = await this.journal.addMember(tour, {personId, role: this.role, from: at});
           break;
         case 'end':
           result = await this.journal.endMember(tour, memberId!, at);
           break;
         case 'replace':
-          result = await this.journal.replaceMember(tour, memberId!, this.personId, at);
+          result = await this.journal.replaceMember(tour, memberId!, personId, at);
           break;
         case 'swap':
           result = await this.journal.swapRoles(tour, this.swapA, this.swapB, at);

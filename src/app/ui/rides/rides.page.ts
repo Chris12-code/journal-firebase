@@ -7,8 +7,10 @@ import {Clock} from '../../application/clock';
 import {JournalService} from '../../application/journal.service';
 import {MasterDataService} from '../../application/master-data.service';
 import {positionLabel, Ride} from '../../domain/model';
-import {formatTime} from '../shared/datetime';
-import {backendErrorMessage} from '../shared/errors';
+import {confirmAction} from '../shared/confirm-dialog.component';
+import {formatTime, nowMinute} from '../shared/datetime';
+import {openForm} from '../shared/dialogs';
+import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {AmbulanceDialogComponent, AmbulanceDialogData} from './ambulance-dialog.component';
 import {RideDialogComponent, RideDialogData} from './ride-dialog.component';
 
@@ -40,7 +42,15 @@ import {RideDialogComponent, RideDialogData} from './ride-dialog.component';
               @for (ride of journal.rides(); track ride.id) {
                 <tr [attr.data-kind]="ride.kind ?? 'TRANSPORT'">
                   <td>{{ time(ride.alarmAt) }}</td>
-                  <td>{{ time(ride.returnedAt) || '–' }}</td>
+                  <td>
+                    @if (ride.returnedAt || ride.kind === 'AMBULANCE') {
+                      {{ time(ride.returnedAt) || '–' }}
+                    } @else {
+                      <button mat-stroked-button class="return-now" (click)="returnNow(ride)" title="Rückkehr auf jetzt setzen">
+                        <mat-icon>keyboard_return</mat-icon> Zurück jetzt
+                      </button>
+                    }
+                  </td>
                   <td>{{ vehicles(ride) }}</td>
                   @if (ride.kind === 'AMBULANCE') {
                     <td>Ambulanz</td>
@@ -70,6 +80,7 @@ import {RideDialogComponent, RideDialogData} from './ride-dialog.component';
     table.rides td:nth-child(5), table.rides td:nth-child(6), table.rides td:nth-child(7) { white-space: normal; min-width: 140px; }
     tr[data-kind='AMBULANCE'] { background: #fff8e1; }
     .row-actions { text-align: right; }
+    .return-now { height: 32px; }
   `,
 })
 export class RidesPage {
@@ -103,19 +114,23 @@ export class RidesPage {
   }
 
   protected open(ride?: Ride): void {
-    this.dialog.open<RideDialogComponent, RideDialogData>(RideDialogComponent, {
-      data: {ride},
-      width: '640px',
-      maxWidth: '95vw',
-    });
+    openForm<RideDialogComponent, RideDialogData>(this.dialog, this.snack, RideDialogComponent, {data: {ride}, width: '640px'});
   }
 
   protected openAmbulance(ride?: Ride): void {
-    this.dialog.open<AmbulanceDialogComponent, AmbulanceDialogData>(AmbulanceDialogComponent, {
-      data: {ride},
-      width: '680px',
-      maxWidth: '95vw',
-    });
+    openForm<AmbulanceDialogComponent, AmbulanceDialogData>(this.dialog, this.snack, AmbulanceDialogComponent, {data: {ride}, width: '680px'});
+  }
+
+  /** Sets the return time of an open transport to the current minute (at least one minute after the alarm). */
+  protected async returnNow(ride: Ride): Promise<void> {
+    const returnedAt = new Date(Math.max(nowMinute().getTime(), ride.alarmAt.getTime() + 60_000));
+    try {
+      const result = await this.journal.saveRide({...ride, returnedAt});
+      if (result.ok) this.snack.open('Rückkehr eingetragen', undefined, {duration: 3000});
+      else this.snack.open(joinErrors(result.errors), 'OK', {duration: 8000});
+    } catch (err) {
+      this.snack.open(backendErrorMessage(err), 'OK', {duration: 8000});
+    }
   }
 
   protected edit(ride: Ride): void {
@@ -124,7 +139,13 @@ export class RidesPage {
   }
 
   protected async remove(ride: Ride): Promise<void> {
-    if (!confirm(ride.kind === 'AMBULANCE' ? 'Ambulanz wirklich löschen?' : 'Fahrt wirklich löschen?')) return;
+    const ambulance = ride.kind === 'AMBULANCE';
+    const confirmed = await confirmAction(this.dialog, {
+      title: ambulance ? 'Ambulanz löschen?' : 'Fahrt löschen?',
+      message: ambulance ? 'Ambulanz wirklich löschen?' : 'Fahrt wirklich löschen?',
+      confirmLabel: 'Löschen',
+    });
+    if (!confirmed) return;
     try {
       await this.journal.deleteRide(ride);
     } catch (err) {

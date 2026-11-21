@@ -1,5 +1,5 @@
 import {Ride, RIDE_TYPES, RideCrewEntry, Tour, ValidationError} from './model';
-import {activeMembersAt, isActiveAt} from './tour';
+import {activeMembersAt, isActiveAt, tourEnd, tourStart} from './tour';
 
 // Ride rules (spec rides, design D2/D4).
 
@@ -14,8 +14,22 @@ export function crewAt(tour: Tour, at: Date): RideCrewEntry[] {
 }
 
 /**
+ * The moment whose crew pre-fills a ride: the alarm time while the tour is active then, otherwise the
+ * alarm time clamped into the tour (its start, or the last minute before its end).
+ */
+export function prefillInstant(tour: Tour, alarmAt: Date): Date {
+  if (isActiveAt(tour, alarmAt)) return alarmAt;
+  const start = tourStart(tour);
+  const end = tourEnd(tour);
+  if (start && alarmAt.getTime() < start.getTime()) return start;
+  if (end && alarmAt.getTime() >= end.getTime()) return new Date(end.getTime() - 60_000);
+  return alarmAt;
+}
+
+/**
  * Pre-fills tour-dependent fields of a transport: the vehicle defaults to the tour's home vehicle
- * (none when the tour has none) and the crew to the members active at the alarm time.
+ * (none when the tour has none) and the crew to the members active at the alarm time, or, when the
+ * tour was not active then, at the nearest moment within the tour (see `prefillInstant`).
  */
 export function prefillRide(tour: Tour, alarmAt: Date): Pick<Ride, 'kind' | 'tourId' | 'vehicleIds' | 'crew' | 'alarmAt'> {
   return {
@@ -23,7 +37,7 @@ export function prefillRide(tour: Tour, alarmAt: Date): Pick<Ride, 'kind' | 'tou
     tourId: tour.id ?? '',
     vehicleIds: tour.homeVehicleId ? [tour.homeVehicleId] : [],
     alarmAt,
-    crew: crewAt(tour, alarmAt),
+    crew: crewAt(tour, prefillInstant(tour, alarmAt)),
   };
 }
 

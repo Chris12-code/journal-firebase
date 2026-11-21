@@ -10,7 +10,10 @@ import {MasterDataService} from '../../application/master-data.service';
 import {CrewMember, ROLE_LABELS, Shift, SHIFT_LABELS, Tour} from '../../domain/model';
 import {PlannedSlot, SlotStatus} from '../../domain/shift-plan';
 import {isActive, tourEnd} from '../../domain/tour';
+import {RideDialogComponent, RideDialogData} from '../rides/ride-dialog.component';
+import {confirmAction} from '../shared/confirm-dialog.component';
 import {formatTime} from '../shared/datetime';
+import {openForm} from '../shared/dialogs';
 import {backendErrorMessage, joinErrors} from '../shared/errors';
 import {CrewChangeData, CrewChangeDialogComponent, CrewChangeMode} from './crew-change-dialog.component';
 import {TourDialogComponent, TourDialogData} from './tour-dialog.component';
@@ -97,6 +100,7 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
             </mat-card-content>
             <mat-card-actions>
               @if (active(tour)) {
+                <button mat-flat-button (click)="logRide(tour)"><mat-icon>add</mat-icon> Fahrt erfassen</button>
                 <button mat-button (click)="change('add', tour)"><mat-icon>person_add</mat-icon> Mitglied hinzufügen</button>
                 @if (activeCount(tour) >= 2) {
                   <button mat-button (click)="change('swap', tour)"><mat-icon>sync_alt</mat-icon> Rollen tauschen</button>
@@ -130,7 +134,7 @@ import {describeWarnings, sortedMembers, tourTitle} from './tour-text';
     table.crew th, table.crew td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(0,0,0,.08); }
     table.crew tr.ended td { color: rgba(0,0,0,.5); }
     .row-actions { white-space: nowrap; text-align: right; }
-    mat-card-actions { flex-wrap: wrap; }
+    mat-card-actions { flex-wrap: wrap; gap: 4px; }
   `,
 })
 export class ToursPage {
@@ -183,40 +187,44 @@ export class ToursPage {
     return tour.members.filter(m => !m.to).map(m => this.md.personName(m.personId)).join(', ') || 'beendet';
   }
 
+  private openTour(data: TourDialogData, width = '600px'): void {
+    openForm<TourDialogComponent, TourDialogData>(this.dialog, this.snack, TourDialogComponent, {data, width});
+  }
+
   protected occupy(slot: PlannedSlot): void {
-    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {
-      data: {kind: 'SHIFT', slot},
-      width: '560px',
-      maxWidth: '95vw',
-    });
+    this.openTour({kind: 'SHIFT', slot});
   }
 
   protected startExtra(): void {
-    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {
-      data: {kind: 'EXTRA'},
-      width: '560px',
-      maxWidth: '95vw',
-    });
+    this.openTour({kind: 'EXTRA'});
   }
 
   protected startTour(): void {
-    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {data: {}, width: '560px', maxWidth: '95vw'});
+    this.openTour({});
   }
 
   protected correct(tour: Tour): void {
-    this.dialog.open<TourDialogComponent, TourDialogData>(TourDialogComponent, {data: {tour}, width: '640px', maxWidth: '95vw'});
+    this.openTour({tour}, '680px');
+  }
+
+  protected logRide(tour: Tour): void {
+    openForm<RideDialogComponent, RideDialogData>(this.dialog, this.snack, RideDialogComponent, {data: {tourId: tour.id}, width: '640px'});
   }
 
   protected change(mode: CrewChangeMode, tour: Tour, member?: CrewMember): void {
-    this.dialog.open<CrewChangeDialogComponent, CrewChangeData>(CrewChangeDialogComponent, {
+    openForm<CrewChangeDialogComponent, CrewChangeData>(this.dialog, this.snack, CrewChangeDialogComponent, {
       data: {mode, tour, memberId: member?.id},
-      width: '480px',
-      maxWidth: '95vw',
+      width: '520px',
     });
   }
 
   protected async remove(tour: Tour): Promise<void> {
-    if (!confirm(`Tour „${this.title(tour)}“ wirklich löschen?`)) return;
+    const confirmed = await confirmAction(this.dialog, {
+      title: 'Tour löschen?',
+      message: `Tour „${this.title(tour)}“ wirklich löschen?`,
+      confirmLabel: 'Löschen',
+    });
+    if (!confirmed) return;
     try {
       const result = await this.journal.deleteTour(tour);
       if (!result.ok) this.snack.open(joinErrors(result.errors), 'OK', {duration: 8000});

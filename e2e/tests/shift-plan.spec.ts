@@ -3,7 +3,7 @@ import {isWorkingDay} from '../../src/app/domain/calendar';
 import {slotByKey} from '../../src/app/domain/shift-plan';
 import {loginAs} from '../helpers/auth';
 import {seedMasterData} from '../helpers/emulator';
-import {choose, dialog, toInput, tourCard} from '../helpers/ui';
+import {choose, dialog, expectDateTime, tourCard} from '../helpers/ui';
 
 test.beforeEach(async () => {
   await seedMasterData();
@@ -38,7 +38,7 @@ test('shift plan: occupy a planned slot with pre-filled values, planned end prop
   await expect(d.getByRole('heading', {name: 'Dienst besetzen'})).toBeVisible();
   await expect(d.getByRole('combobox', {name: 'Schicht'})).toContainText(slot.shift === 'DAY' ? 'Tag' : 'Nacht');
   await expect(d.getByRole('combobox', {name: 'Stammfahrzeug'})).toHaveValue(slot.vehicleId);
-  await expect(d.getByLabel('Beginn')).toHaveValue(toInput(slot.start));
+  await expectDateTime(d, 'Beginn', slot.start);
   await choose(d, 'Fahrer', 'Anders Anna');
   await d.getByRole('button', {name: 'Speichern'}).click();
   await expect(d).toBeHidden();
@@ -53,7 +53,7 @@ test('shift plan: occupy a planned slot with pre-filled values, planned end prop
   const card = tourCard(page, `${slot.shift === 'DAY' ? 'Tag' : 'Nacht'} · ${slot.vehicleId} (${slot.vehicleType})`);
   await card.getByRole('button', {name: /Tour beenden/}).click();
   const end = dialog(page);
-  await expect(end.getByLabel('Zeitpunkt')).toHaveValue(toInput(slot.end));
+  await expectDateTime(end, 'Zeitpunkt', slot.end);
   await end.getByRole('button', {name: 'Abbrechen'}).click();
   await expect(end).toBeHidden();
 });

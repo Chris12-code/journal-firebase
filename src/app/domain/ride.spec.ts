@@ -1,5 +1,5 @@
 import {positionLabel, Ride} from './model';
-import {crewAt, normalizeResources, prefillRide, toursActiveAt, validateRide} from './ride';
+import {crewAt, normalizeResources, prefillInstant, prefillRide, toursActiveAt, validateRide} from './ride';
 import {endTour, replaceMember} from './tour';
 import {dayTour, nightTour, t} from './testing/fixtures';
 
@@ -81,6 +81,21 @@ describe('ride rules', () => {
       const reduced = {...validRide(), ...prefill, crew: prefill.crew.filter(c => c.role !== 'THIRD')};
       expect(validateRide(reduced)).toEqual([]);
       expect(validateRide({...reduced, crew: []}).map(e => e.code)).toEqual(['EMPTY_CREW']);
+    });
+
+    it('uses the alarm time while the tour is active then', () => {
+      expect(prefillInstant(dayTour(), t(8))).toEqual(t(8));
+    });
+
+    it('uses the tour start for an alarm before the tour', () => {
+      expect(prefillInstant(nightTour(), t(17))).toEqual(t(18));
+      expect(prefillRide(nightTour(), t(17)).crew.map(c => c.personId)).toEqual(['beshiri', 'eder']);
+    });
+
+    it('uses the last minute of an ended tour for an alarm after it', () => {
+      const day = endTour(replaceMember(dayTour(), 'p', 'beshiri', t(10, 30)), t(18, 55));
+      expect(prefillInstant(day, t(20))).toEqual(t(18, 54));
+      expect(prefillRide(day, t(20)).crew.map(c => c.personId)).toEqual(['huber', 'beer', 'beshiri']);
     });
 
     it('is a copy that does not follow later tour edits', () => {

@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 import {loginAs} from '../helpers/auth';
 import {seedMasterData} from '../helpers/emulator';
-import {choose, dialog, toInput} from '../helpers/ui';
+import {choose, dialog, expectDateTime, fillDateTime} from '../helpers/ui';
 
 const now = new Date();
 now.setSeconds(0, 0);
@@ -18,8 +18,8 @@ test('ambulance shift: event with two cars, positions, assistances and resources
   const d = dialog(page);
 
   await d.getByLabel('Veranstaltung / Ort').fill('Seefest Strobl');
-  await d.getByLabel('Beginn').fill(toInput(start));
-  await d.getByLabel('Ende').fill(toInput(end));
+  await fillDateTime(d, 'Beginn', start);
+  await fillDateTime(d, 'Ende', end);
 
   // Vehicles: a default suggestion and an external number typed in
   const vehicles = d.getByPlaceholder('Nummer eingeben, z. B. 45.201');
@@ -74,4 +74,18 @@ test('ambulance shift: event with two cars, positions, assistances and resources
     await expect(r.locator('td').nth(1), `hours of ${id}`).toHaveText('9:00');
     await expect(r.locator('td').nth(2), `rides of ${id}`).toHaveText('1');
   }
+});
+
+test('ambulance shift: an end time typed alone after a 19:00 start lands on the next day', async ({page}) => {
+  await loginAs(page);
+  await page.getByRole('button', {name: /Ambulanz erfassen/}).click();
+  const d = dialog(page);
+  const begin = new Date();
+  begin.setHours(19, 0, 0, 0);
+  await fillDateTime(d, 'Beginn', begin);
+  await fillDateTime(d, 'Ende', '06:00');
+  const next = new Date(begin);
+  next.setDate(next.getDate() + 1);
+  next.setHours(6, 0, 0, 0);
+  await expectDateTime(d, 'Ende', next);
 });

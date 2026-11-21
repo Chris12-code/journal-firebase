@@ -32,3 +32,50 @@ export function toInput(d: Date): string {
   const pad = (n: number) => n.toString().padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+const pad2 = (n: number) => n.toString().padStart(2, '0');
+
+/** "21.11.2026 14:05", as shown by an app-datetime-field. */
+export function dateTimeText(d: Date): string {
+  return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** The text input of the app-datetime-field labelled `label`. */
+export function dateTimeInput(scope: Page | Locator, label: string): Locator {
+  return scope.getByRole('textbox', {name: label, exact: true});
+}
+
+/** Types a point in time (or any text, e.g. "06:00") into an app-datetime-field and leaves the field. */
+export async function fillDateTime(scope: Page | Locator, label: string, value: Date | string): Promise<void> {
+  const field = dateTimeInput(scope, label);
+  await field.fill(typeof value === 'string' ? value : dateTimeText(value));
+  await field.blur();
+}
+
+/** Reads the point in time shown by an app-datetime-field. */
+export async function readDateTime(scope: Page | Locator, label: string): Promise<Date> {
+  const [date, time] = (await dateTimeInput(scope, label).inputValue()).split(' ');
+  const [day, month, year] = date.split('.').map(Number);
+  const [hours, minutes] = time.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+}
+
+/** Asserts the point in time shown by an app-datetime-field. */
+export async function expectDateTime(scope: Page | Locator, label: string, d: Date): Promise<void> {
+  await expect(dateTimeInput(scope, label)).toHaveValue(dateTimeText(d));
+}
+
+/** Today (+ day offset) at the given local time. */
+export function todayAt(hours: number, minutes = 0, dayOffset = 0): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hours, minutes, 0, 0);
+  return d;
+}
+
+/** Confirms the Material confirm dialog (e.g. before deleting). */
+export async function confirmDialog(page: Page, button = 'Löschen'): Promise<void> {
+  const d = page.getByRole('dialog').filter({has: page.getByRole('button', {name: button, exact: true})});
+  await d.getByRole('button', {name: button, exact: true}).click();
+  await expect(d).toBeHidden();
+}

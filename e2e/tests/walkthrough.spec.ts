@@ -1,7 +1,7 @@
 import {expect, Page, test} from '@playwright/test';
 import {loginAs} from '../helpers/auth';
 import {seedMasterData} from '../helpers/emulator';
-import {choose, dialog, toInput, tourCard} from '../helpers/ui';
+import {choose, dialog, fillDateTime, tourCard} from '../helpers/ui';
 
 // Full day on the journal sheet through the UI, then the yearly report against hand-calculated totals.
 //
@@ -23,10 +23,9 @@ async function logRide(page: Page, alarm: Date, opts: {tour?: RegExp; vehicle?: 
   await page.getByRole('link', {name: /Fahrten/}).click();
   await page.getByRole('button', {name: /Neue Fahrt/}).click();
   const ride = dialog(page);
-  await ride.getByLabel('Alarmierung').fill(toInput(alarm));
-  await ride.getByLabel('Alarmierung').blur();
+  await fillDateTime(ride, 'Alarmierung', alarm);
   if (opts.tour) await choose(ride, 'Tour', opts.tour);
-  await expect(ride.getByRole('combobox', {name: 'Person 1'})).not.toBeEmpty();
+  await expect(ride.getByRole('combobox', {name: 'Person 1'})).not.toHaveValue('');
   if (opts.vehicle) await choose(ride, 'Fahrzeug', opts.vehicle);
   if (opts.removeCrew) await ride.getByRole('button', {name: `Entfernen ${opts.removeCrew}`}).click();
   await choose(ride, 'Art', opts.type);
@@ -38,7 +37,7 @@ async function crewChange(page: Page, card: ReturnType<typeof tourCard>, button:
   await card.getByRole('button', {name: button}).click();
   const d = dialog(page);
   if (person) await choose(d, 'Neue Person', person);
-  await d.getByLabel('Zeitpunkt').fill(toInput(time));
+  await fillDateTime(d, 'Zeitpunkt', time);
   await d.getByRole('button', {name: confirm}).click();
   await expect(d).toBeHidden();
 }
@@ -57,7 +56,7 @@ test('walkthrough: a full day on the journal sheet adds up in the yearly report'
   let d = dialog(page);
   await choose(d, 'Schicht', 'Tag');
   await choose(d, 'Stammfahrzeug', '44.201 (RTW)');
-  await d.getByLabel('Beginn').fill(toInput(B));
+  await fillDateTime(d, 'Beginn', B);
   await choose(d, 'Fahrer', 'Anders Anna');
   await choose(d, 'Transportführer', 'Berger Bernd');
   await choose(d, 'Dritter', 'Csar Clara');
@@ -79,7 +78,7 @@ test('walkthrough: a full day on the journal sheet adds up in the yearly report'
   await page.getByRole('button', {name: /Tour beginnen/}).click();
   d = dialog(page);
   await choose(d, 'Schicht', 'Nacht');
-  await d.getByLabel('Beginn').fill(toInput(at(12)));
+  await fillDateTime(d, 'Beginn', at(12));
   await choose(d, 'Fahrer', 'Eder Eva');
   await choose(d, 'Transportführer', 'Berger Bernd');
   await d.getByRole('button', {name: 'Speichern'}).click();

@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 import {loginAs} from '../helpers/auth';
 import {seedMasterData} from '../helpers/emulator';
-import {choose, dialog, toInput, tourCard} from '../helpers/ui';
+import {choose, dialog, fillDateTime, tourCard} from '../helpers/ui';
 
 // RTW is out, Eva and Bernd take the KTW for two transports.
 //   B      B+1h  B+2h  B+3h      B+4:30
@@ -23,7 +23,7 @@ test('extra car: hours run from the first ride to the last ride', async ({page})
   const d = dialog(page);
   await expect(d.getByRole('heading', {name: 'Zusatzfahrzeug'})).toBeVisible();
   await choose(d, 'Stammfahrzeug', '44.301 (KTW)');
-  await d.getByLabel('Beginn').fill(toInput(B));
+  await fillDateTime(d, 'Beginn', B);
   await choose(d, 'Fahrer', 'Eder Eva');
   await choose(d, 'Transportführer', 'Berger Bernd');
   await d.getByRole('button', {name: 'Speichern'}).click();
@@ -36,12 +36,11 @@ test('extra car: hours run from the first ride to the last ride', async ({page})
     await page.getByRole('link', {name: /Fahrten/}).click();
     await page.getByRole('button', {name: /Neue Fahrt/}).click();
     const ride = dialog(page);
-    await ride.getByLabel('Alarmierung').fill(toInput(alarm));
-    await ride.getByLabel('Alarmierung').blur();
+    await fillDateTime(ride, 'Alarmierung', alarm);
     await expect(ride.getByRole('combobox', {name: 'Tour'})).toContainText('Zusatzfahrzeug · 44.301 (KTW)');
     await expect(ride.getByRole('combobox', {name: 'Fahrzeug'})).toHaveValue('44.301');
-    await expect(ride.getByRole('combobox', {name: 'Person 2'})).toContainText('Berger Bernd');
-    await ride.getByLabel('Rückkehr').fill(toInput(back));
+    await expect(ride.getByRole('combobox', {name: 'Person 2'})).toHaveValue('Berger Bernd');
+    await fillDateTime(ride, 'Rückkehr', back);
     await choose(ride, 'Art', 'KT');
     await ride.getByRole('button', {name: 'Speichern'}).click();
     await expect(ride).toBeHidden();

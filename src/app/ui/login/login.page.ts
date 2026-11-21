@@ -15,7 +15,7 @@ import {SessionService} from '../../application/session.service';
       <mat-card>
         <mat-card-header><mat-card-title>Login</mat-card-title></mat-card-header>
         <mat-card-content>
-          <p class="muted">Bitte mit dem persönlichen Konto anmelden.</p>
+          <p class="muted">Bitte mit dem Konto der Dienststelle oder dem persönlichen Konto anmelden.</p>
           <form (ngSubmit)="login()">
             <mat-form-field class="full-width">
               <mat-label>E-Mail</mat-label>

@@ -1,14 +1,26 @@
 rules_version = '2';
 
 // Access rules for the RK Strobl Journalblatt (see spec journal-access, master-data).
-// - Every access requires a logged-in user. There are no further roles.
+// - Access requires a login account with an active entry in `users` (role STATION or ADMIN).
+//   An account without an entry gets nothing, even though it can sign in.
+// - users are maintained by ADMIN accounts; nobody can change their own role or active flag or remove themselves.
 // - persons / vehicles are maintained in the Firebase console and read-only for the app.
-// - tours / rides carry author stamps that must match the writing user.
+// - tours / rides carry author stamps that must match the writing account.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() {
-      return request.auth != null;
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function member() {
+      return request.auth != null
+        && exists(userPath(request.auth.uid))
+        && get(userPath(request.auth.uid)).data.active == true;
+    }
+
+    function admin() {
+      return member() && get(userPath(request.auth.uid)).data.role == 'ADMIN';
     }
 
     function validCreate() {
@@ -27,36 +39,57 @@ service cloud.firestore {
         && d.createdAt == resource.data.createdAt;
     }
 
+    function validUserEntry() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['email', 'name', 'role', 'active'])
+        && d.keys().hasAll(['email', 'name', 'role', 'active'])
+        && d.email is string && d.email.size() > 0
+        && d.name is string && d.name.size() > 0
+        && d.role in ['STATION', 'ADMIN']
+        && d.active is bool;
+    }
+
+    match /users/{uid} {
+      allow read: if admin() || (request.auth != null && request.auth.uid == uid);
+      allow create: if admin() && validUserEntry();
+      allow update: if admin() && validUserEntry()
+        && request.resource.data.email == resource.data.email
+        && (uid != request.auth.uid
+            || (request.resource.data.role == resource.data.role
+                && request.resource.data.active == resource.data.active));
+      allow delete: if admin() && uid != request.auth.uid;
+    }
+
     match /persons/{personId} {
-      allow read: if signedIn();
+      allow read: if member();
       allow write: if false;
     }
 
     match /vehicles/{vehicleId} {
-      allow read: if signedIn();
+      allow read: if member();
       allow write: if false;
     }
 
     match /tours/{tourId} {
-      allow read, delete: if signedIn();
-      allow create: if signedIn() && validCreate();
-      allow update: if signedIn() && validUpdate();
+      allow read, delete: if member();
+      allow create: if member() && validCreate();
+      allow update: if member() && validUpdate();
     }
 
     match /rides/{rideId} {
-      allow read, delete: if signedIn();
-      allow create: if signedIn() && validCreate();
-      allow update: if signedIn() && validUpdate();
+      allow read, delete: if member();
+      allow create: if member() && validCreate();
+      allow update: if member() && validUpdate();
     }
 
     // Legacy collections of the previous app version.
     // Keep them usable until the cut-over, then remove these two blocks.
     match /car-tour/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if member();
     }
 
     match /rescue-operation/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if member();
     }
   }
 }

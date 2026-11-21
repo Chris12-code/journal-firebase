@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test';
 import {loginAs} from '../helpers/auth';
+import {TEST_ACCOUNTS} from '../helpers/emulator';
 
 test('smoke: only the login is shown until logged in, logout returns to login', async ({page}) => {
   await page.goto('/');
@@ -10,7 +11,7 @@ test('smoke: only the login is shown until logged in, logout returns to login', 
   await expect(page.getByRole('link', {name: /Fahrten/})).toHaveCount(0);
 
   // Wrong password shows an error
-  await page.locator('input[type="email"]').fill('test@example.com');
+  await page.locator('input[type="email"]').fill(TEST_ACCOUNTS.station.email);
   await page.locator('input[type="password"]').fill('wrong-password');
   await page.locator('button[type="submit"]', {hasText: 'Login'}).click();
   await expect(page.getByText('E-Mail oder Passwort ist falsch.')).toBeVisible();

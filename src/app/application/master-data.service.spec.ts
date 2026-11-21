@@ -42,6 +42,19 @@ describe('MasterDataService', () => {
     expect(service.persons()).toEqual([]);
   });
 
+  it('loads nothing for an account without access', async () => {
+    fx.auth.loginAs('nobody', null);
+    await flush();
+    expect(fx.masterData.loads).toBe(0);
+    expect(service.persons()).toEqual([]);
+  });
+
+  it('loads for the station login', async () => {
+    fx.auth.loginAs('station', {email: 's@example.com', name: 'RK Strobl', role: 'STATION', active: true});
+    await flush();
+    expect(fx.masterData.loads).toBe(1);
+  });
+
   it('offers only active entries, sorted', async () => {
     fx.auth.subject.next({uid: 'u1', email: null});
     await flush();

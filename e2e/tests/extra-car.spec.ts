@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
-import {loginAs} from '../helpers/auth';
-import {seedMasterData} from '../helpers/emulator';
+import {loginAs, switchTo} from '../helpers/auth';
+import {seedMasterData, TEST_ACCOUNTS} from '../helpers/emulator';
 import {choose, dialog, fillDateTime, tourCard} from '../helpers/ui';
 
 // RTW is out, Eva and Bernd take the KTW for two transports.
@@ -46,6 +46,8 @@ test('extra car: hours run from the first ride to the last ride', async ({page})
     await expect(ride).toBeHidden();
   }
 
+  // The report is for admins only
+  await switchTo(page, TEST_ACCOUNTS.admin);
   await page.getByRole('link', {name: /Jahresbericht/}).click();
   if (B.getFullYear() !== now.getFullYear()) {
     await page.getByRole('combobox', {name: 'Jahr'}).click();

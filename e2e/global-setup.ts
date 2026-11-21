@@ -1,25 +1,24 @@
-import {PROJECT_ID, seedMasterData} from './helpers/emulator';
+import {PROJECT_ID, seedMasterData, TEST_ACCOUNTS} from './helpers/emulator';
 
 const AUTH_EMULATOR_URL = 'http://localhost:9099';
 
+/** Creates a login account with a fixed uid (admin call to the Auth emulator). */
+async function createAccount(uid: string, email: string, password: string): Promise<void> {
+  const response = await fetch(`${AUTH_EMULATOR_URL}/identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts?key=fake-api-key`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', Authorization: 'Bearer owner'},
+    body: JSON.stringify({localId: uid, email, password}),
+  });
+  if (!response.ok) throw new Error(`Failed to create test account ${email}: ${await response.text()}`);
+}
+
 async function globalSetup() {
-  // Clear existing users in the emulator
+  // Clear existing accounts in the emulator
   await fetch(`${AUTH_EMULATOR_URL}/emulator/v1/projects/${PROJECT_ID}/accounts`, {method: 'DELETE'});
 
-  // Create test user via Auth emulator REST API
-  const response = await fetch(
-    `${AUTH_EMULATOR_URL}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key`,
-    {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email: 'test@example.com', password: 'password123', returnSecureToken: true}),
-    },
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to create test user: ${await response.text()}`);
-  }
+  for (const {uid, email, password} of Object.values(TEST_ACCOUNTS)) await createAccount(uid, email, password);
 
-  // Reset Firestore and seed persons and vehicles
+  // Reset Firestore and seed user entries, persons and vehicles
   await seedMasterData();
 }
 

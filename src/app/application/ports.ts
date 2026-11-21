@@ -1,5 +1,6 @@
 import {Observable} from 'rxjs';
 import {Person, Ride, Tour, Vehicle} from '../domain/model';
+import {UserEntry, UserRole} from '../domain/user';
 
 // Repository ports (design D1). Abstract classes double as DI tokens;
 // the data layer provides the Firestore implementations.
@@ -14,6 +15,30 @@ export abstract class AuthGateway {
   abstract readonly user$: Observable<SessionUser | null>;
   abstract login(email: string, password: string): Promise<void>;
   abstract logout(): Promise<void>;
+  /** Live user entry of the given account; null when there is none or it cannot be read. */
+  abstract access$(uid: string): Observable<UserEntry | null>;
+  /** Sends a password reset email to the address. */
+  abstract sendPasswordReset(email: string): Promise<void>;
+}
+
+export interface NewUser {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+}
+
+export type UserChanges = Pick<UserEntry, 'name' | 'role' | 'active'>;
+
+/** User maintenance (spec journal-access, design D3/D4). Only admins may use it. */
+export abstract class UserRepository {
+  /** Live list of all user entries. */
+  abstract list$(): Observable<UserEntry[]>;
+  /** Creates the login account and its active user entry; returns the new uid. */
+  abstract create(user: NewUser): Promise<string>;
+  abstract update(uid: string, changes: UserChanges): Promise<void>;
+  /** Deletes the user entry; the login account stays. */
+  abstract remove(uid: string): Promise<void>;
 }
 
 export abstract class MasterDataRepository {

@@ -2,7 +2,7 @@ import {Timestamp} from 'firebase/firestore';
 import {Ride, Tour} from '../domain/model';
 import {endMember} from '../domain/tour';
 import {dayTour, t} from '../domain/testing/fixtures';
-import {docToPerson, docToRide, docToTour, docToVehicle, rideToDoc, tourToDoc} from './mappers';
+import {docToPerson, docToRide, docToTour, docToUserEntry, docToVehicle, rideToDoc, tourToDoc, userEntryToDoc} from './mappers';
 
 describe('Firestore mappers', () => {
   it('round-trips an active tour and stores derived start / null end', () => {
@@ -117,5 +117,23 @@ describe('Firestore mappers', () => {
     expect(docToPerson('07414', {name: 'Beer'})).toEqual({number: '07414', name: 'Beer', phone: undefined, email: undefined, active: true});
     expect(docToPerson('1', {name: 'X', active: false}).active).toBeFalse();
     expect(docToVehicle('80.103', {type: 'KTW', active: true})).toEqual({number: '80.103', type: 'KTW', active: true});
+  });
+
+  it('round-trips a user entry', () => {
+    const entry = {uid: 'abc', email: 'station@example.com', name: 'RK Strobl', role: 'STATION' as const, active: true};
+    const {uid, ...rest} = entry;
+    const doc = userEntryToDoc(rest);
+    expect(doc).toEqual({email: 'station@example.com', name: 'RK Strobl', role: 'STATION', active: true});
+    expect(docToUserEntry(uid, doc)).toEqual(entry);
+  });
+
+  it('trims email and name of user entries', () => {
+    expect(userEntryToDoc({email: ' a@b.at ', name: ' Max ', role: 'ADMIN', active: false}))
+      .toEqual({email: 'a@b.at', name: 'Max', role: 'ADMIN', active: false});
+  });
+
+  it('falls back to the least access for incomplete user entries', () => {
+    expect(docToUserEntry('x', {role: 'OWNER'})).toEqual({uid: 'x', email: '', name: '', role: 'STATION', active: false});
+    expect(docToUserEntry('x', {role: 'ADMIN', active: 'true'}).active).toBeFalse();
   });
 });

@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
-import {loginAs} from '../helpers/auth';
-import {seedMasterData} from '../helpers/emulator';
+import {loginAs, switchTo} from '../helpers/auth';
+import {seedMasterData, TEST_ACCOUNTS} from '../helpers/emulator';
 import {choose, dialog, expectDateTime, fillDateTime} from '../helpers/ui';
 
 const now = new Date();
@@ -64,6 +64,8 @@ test('ambulance shift: event with two cars, positions, assistances and resources
   await invalid.getByRole('button', {name: 'Abbrechen'}).click();
 
   // Report: 9 hours and one ride for both
+  // The report is for admins only
+  await switchTo(page, TEST_ACCOUNTS.admin);
   await page.getByRole('link', {name: /Jahresbericht/}).click();
   if (start.getFullYear() !== now.getFullYear()) {
     await page.getByRole('combobox', {name: 'Jahr'}).click();

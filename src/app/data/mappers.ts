@@ -2,6 +2,7 @@ import {DocumentData, Timestamp} from 'firebase/firestore';
 import {Audit, CrewMember, Person, Ride, RideCrewEntry, Tour, Vehicle, VehicleType} from '../domain/model';
 import {normalizeResources} from '../domain/ride';
 import {tourEnd, tourStart} from '../domain/tour';
+import {UserEntry} from '../domain/user';
 
 // The only place that knows the Firestore document shapes (design D3).
 // Timestamps never leave this file; optional fields are stored as explicit null.
@@ -32,6 +33,21 @@ export function docToPerson(id: string, data: DocumentData): Person {
 
 export function docToVehicle(id: string, data: DocumentData): Vehicle {
   return {number: id, type: data['type'] as VehicleType, active: data['active'] !== false};
+}
+
+/** User entries (design D1). Unknown roles and missing flags fall back to the least access. */
+export function docToUserEntry(uid: string, data: DocumentData): UserEntry {
+  return {
+    uid,
+    email: String(data['email'] ?? ''),
+    name: String(data['name'] ?? ''),
+    role: data['role'] === 'ADMIN' ? 'ADMIN' : 'STATION',
+    active: data['active'] === true,
+  };
+}
+
+export function userEntryToDoc(entry: Omit<UserEntry, 'uid'>): DocumentData {
+  return {email: entry.email.trim(), name: entry.name.trim(), role: entry.role, active: entry.active};
 }
 
 function docToAudit(data: DocumentData): Audit | undefined {

@@ -1,8 +1,9 @@
 // Integration tests against the Firebase emulators. Run with: npm run test:integration
 import {TestBed} from '@angular/core/testing';
-import {createUserWithEmailAndPassword, signInWithEmailAndPassword} from 'firebase/auth';
+import {connectAuthEmulator, createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut} from 'firebase/auth';
+import {getApp, initializeApp} from 'firebase/app';
 import {filter, firstValueFrom} from 'rxjs';
-import {MasterDataRepository, RideRepository, TourRepository} from '../application/ports';
+import {AuthGateway, MasterDataRepository, RideRepository, TourRepository, UserRepository} from '../application/ports';
 import {Ride, Tour} from '../domain/model';
 import {endTour} from '../domain/tour';
 import {dayTour, t} from '../domain/testing/fixtures';
@@ -20,6 +21,20 @@ async function clearFirestore() {
 
 async function seed(path: string, fields: Record<string, unknown>) {
   await fetch(`${DOCS_URL}/${path}`, {method: 'PATCH', headers: OWNER, body: JSON.stringify({fields})});
+}
+
+async function removeDoc(path: string) {
+  await fetch(`${DOCS_URL}/${path}`, {method: 'DELETE', headers: OWNER});
+}
+
+/** Gives an account a user entry (bypasses the rules like the console does). */
+async function seedUser(uid: string, role: 'STATION' | 'ADMIN', active = true) {
+  await seed(`users/${uid}`, {
+    email: {stringValue: `${uid}@example.com`},
+    name: {stringValue: uid},
+    role: {stringValue: role},
+    active: {booleanValue: active},
+  });
 }
 
 const newTour = (): Tour => {
@@ -64,6 +79,80 @@ describe('Firestore repositories (emulator)', () => {
       uid = auth.currentUser.uid;
     }
     await clearFirestore();
+    await seedUser(uid, 'ADMIN');
+  });
+
+  describe('auth gateway', () => {
+    it('emits the own user entry live and null once it is removed', async () => {
+      const gateway = TestBed.inject(AuthGateway);
+      const entry = await firstValueFrom(gateway.access$(uid).pipe(filter(e => !!e)));
+      expect(entry).toEqual({uid, email: `${uid}@example.com`, name: uid, role: 'ADMIN', active: true});
+
+      const gone = firstValueFrom(gateway.access$(uid).pipe(filter(e => e === null)));
+      await removeDoc(`users/${uid}`);
+      expect(await gone).toBeNull();
+    });
+
+    it('emits null for an account without an entry', async () => {
+      await removeDoc(`users/${uid}`);
+      const gateway = TestBed.inject(AuthGateway);
+      expect(await firstValueFrom(gateway.access$(uid))).toBeNull();
+    });
+
+    it('rejects journal reads once the entry is inactive', async () => {
+      await seedUser(uid, 'STATION', false);
+      await expectAsync(masterData.loadPersons()).toBeRejected();
+    });
+
+    it('sends a password reset email', async () => {
+      const gateway = TestBed.inject(AuthGateway);
+      await expectAsync(gateway.sendPasswordReset(TestBed.inject(AUTH).currentUser!.email!)).toBeResolved();
+    });
+  });
+
+  describe('users', () => {
+    const newEmail = () => `new-${Date.now()}-${Math.round(Math.random() * 1e6)}@example.com`;
+
+    it('creates an account and its entry while the admin stays logged in', async () => {
+      const users = TestBed.inject(UserRepository);
+      const email = newEmail();
+      const newUid = await users.create({email, password: 'secret123', name: 'Neu', role: 'STATION'});
+
+      expect(TestBed.inject(AUTH).currentUser?.uid).toBe(uid);
+      const list = await firstValueFrom(users.list$().pipe(filter(l => l.some(u => u.uid === newUid))));
+      expect(list.find(u => u.uid === newUid)).toEqual({uid: newUid, email, name: 'Neu', role: 'STATION', active: true});
+
+      // The new account can sign in (checked on a separate app so the admin session stays untouched).
+      const probeApp = initializeApp(getApp().options, `probe-${Date.now()}`);
+      const probe = getAuth(probeApp);
+      connectAuthEmulator(probe, 'http://localhost:9099', {disableWarnings: true});
+      const cred = await signInWithEmailAndPassword(probe, email, 'secret123');
+      expect(cred.user.uid).toBe(newUid);
+      await signOut(probe);
+    });
+
+    it('creates no entry when the email is already in use', async () => {
+      const users = TestBed.inject(UserRepository);
+      const email = newEmail();
+      await users.create({email, password: 'secret123', name: 'Erst', role: 'STATION'});
+      await expectAsync(users.create({email, password: 'secret123', name: 'Zweit', role: 'ADMIN'})).toBeRejectedWith(
+        jasmine.objectContaining({code: 'auth/email-already-in-use'}),
+      );
+      const list = await firstValueFrom(users.list$());
+      expect(list.filter(u => u.email === email).map(u => u.name)).toEqual(['Erst']);
+    });
+
+    it('updates and removes entries', async () => {
+      const users = TestBed.inject(UserRepository);
+      await seedUser('other', 'STATION');
+      await users.update('other', {name: 'Andere', role: 'ADMIN', active: false});
+      let list = await firstValueFrom(users.list$().pipe(filter(l => l.some(u => u.uid === 'other' && !u.active))));
+      expect(list.find(u => u.uid === 'other')).toEqual({uid: 'other', email: 'other@example.com', name: 'Andere', role: 'ADMIN', active: false});
+
+      await users.remove('other');
+      list = await firstValueFrom(users.list$().pipe(filter(l => !l.some(u => u.uid === 'other'))));
+      expect(list.map(u => u.uid)).toEqual([uid]);
+    });
   });
 
   describe('master data', () => {

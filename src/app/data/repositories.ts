@@ -1,29 +1,32 @@
 import {inject, Injectable} from '@angular/core';
-import {onAuthStateChanged, signInWithEmailAndPassword, signOut} from 'firebase/auth';
+import {createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut} from 'firebase/auth';
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
   getDocs,
+  onSnapshot,
   limit,
   orderBy,
   query,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
 import {combineLatest, map, Observable, shareReplay} from 'rxjs';
-import {AuthGateway, MasterDataRepository, RideRepository, SessionUser, TourRepository} from '../application/ports';
+import {AuthGateway, MasterDataRepository, NewUser, RideRepository, SessionUser, TourRepository, UserChanges, UserRepository} from '../application/ports';
+import {UserEntry} from '../domain/user';
 import {Person, Ride, Tour, Vehicle} from '../domain/model';
 import {tourStart} from '../domain/tour';
-import {AUTH, FIRESTORE} from './firebase';
+import {AUTH, FIRESTORE, USER_ADMIN_AUTH} from './firebase';
 import {createStamps, mapSnapshot, mergeById, updateStamps, watchQuery} from './firestore-util';
-import {docToPerson, docToRide, docToTour, docToVehicle, rideToDoc, tourToDoc} from './mappers';
+import {docToPerson, docToRide, docToTour, docToUserEntry, docToVehicle, rideToDoc, tourToDoc, userEntryToDoc} from './mappers';
 
 // Firestore implementations of the repository ports (design D3, D4, D8).
 
-export const COLLECTIONS = {persons: 'persons', vehicles: 'vehicles', tours: 'tours', rides: 'rides'} as const;
+export const COLLECTIONS = {users: 'users', persons: 'persons', vehicles: 'vehicles', tours: 'tours', rides: 'rides'} as const;
 
 /** Tours can start before the period they contribute time to (night shifts across midnight). */
 const PERIOD_BUFFER_MS = 2 * 24 * 3_600_000;
@@ -31,6 +34,7 @@ const PERIOD_BUFFER_MS = 2 * 24 * 3_600_000;
 @Injectable()
 export class FirebaseAuthGateway extends AuthGateway {
   private readonly auth = inject(AUTH);
+  private readonly db = inject(FIRESTORE);
 
   readonly user$: Observable<SessionUser | null> = new Observable<SessionUser | null>(subscriber =>
     onAuthStateChanged(this.auth, u => subscriber.next(u ? {uid: u.uid, email: u.email} : null)),
@@ -42,6 +46,54 @@ export class FirebaseAuthGateway extends AuthGateway {
 
   async logout(): Promise<void> {
     await signOut(this.auth);
+  }
+
+  /** Live own user entry (design D3). A missing entry or a permission error both mean "no access". */
+  access$(uid: string): Observable<UserEntry | null> {
+    return new Observable<UserEntry | null>(subscriber =>
+      onSnapshot(
+        doc(this.db, COLLECTIONS.users, uid),
+        snap => subscriber.next(snap.exists() ? docToUserEntry(snap.id, snap.data()) : null),
+        () => {
+          subscriber.next(null);
+          subscriber.complete();
+        },
+      ),
+    );
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
+  }
+}
+
+@Injectable()
+export class FirestoreUserRepository extends UserRepository {
+  private readonly db = inject(FIRESTORE);
+  private readonly userAdminAuth = inject(USER_ADMIN_AUTH);
+  private readonly col = collection(this.db, COLLECTIONS.users);
+
+  list$(): Observable<UserEntry[]> {
+    return watchQuery(query(this.col), docToUserEntry);
+  }
+
+  /** Creates the account on the secondary app, then writes the entry as the logged-in admin (design D4). */
+  async create(user: NewUser): Promise<string> {
+    const auth = this.userAdminAuth();
+    const email = user.email.trim();
+    const cred = await createUserWithEmailAndPassword(auth, email, user.password);
+    const uid = cred.user.uid;
+    await signOut(auth);
+    await setDoc(doc(this.col, uid), userEntryToDoc({email, name: user.name, role: user.role, active: true}));
+    return uid;
+  }
+
+  async update(uid: string, changes: UserChanges): Promise<void> {
+    await updateDoc(doc(this.col, uid), {name: changes.name.trim(), role: changes.role, active: changes.active});
+  }
+
+  async remove(uid: string): Promise<void> {
+    await deleteDoc(doc(this.col, uid));
   }
 }
 

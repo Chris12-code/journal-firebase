@@ -57,9 +57,34 @@ export const TEST_PERSONS = [
  */
 export const TEST_VEHICLES: {id: string; type: string; active: boolean}[] = [];
 
-/** Resets Firestore and seeds persons and vehicles. */
+/** Login accounts with fixed uids, created in global setup. Fictional data only. */
+export interface TestAccount {
+  uid: string;
+  email: string;
+  password: string;
+  name: string;
+  role: 'STATION' | 'ADMIN';
+}
+
+export const TEST_ACCOUNTS = {
+  station: {uid: 'e2e-station', email: 'station@example.com', password: 'password123', name: 'RK Strobl', role: 'STATION'},
+  admin: {uid: 'e2e-admin', email: 'admin@example.com', password: 'password123', name: 'Ada Admin', role: 'ADMIN'},
+  /** Can sign in but has no user entry, so it gets no access. */
+  noAccess: {uid: 'e2e-noaccess', email: 'noaccess@example.com', password: 'password123', name: 'Ohne Zugang', role: 'STATION'},
+} satisfies Record<string, TestAccount>;
+
+/** Accounts that get a user entry on every seed. */
+const SEEDED_USERS: TestAccount[] = [TEST_ACCOUNTS.station, TEST_ACCOUNTS.admin];
+
+/** Writes the user entry of an account (as the console would). */
+export async function putUser(account: Pick<TestAccount, 'uid' | 'email' | 'name' | 'role'>, active = true): Promise<void> {
+  await putDoc(`users/${account.uid}`, {email: account.email, name: account.name, role: account.role, active});
+}
+
+/** Resets Firestore and seeds the station and admin user entries, persons and vehicles. */
 export async function seedMasterData(): Promise<void> {
   await clearFirestore();
+  for (const account of SEEDED_USERS) await putUser(account);
   for (const {id, ...data} of TEST_PERSONS) await putDoc(`persons/${id}`, {...data, phone: null, email: null});
   for (const {id, ...data} of TEST_VEHICLES) await putDoc(`vehicles/${id}`, data);
 }

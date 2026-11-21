@@ -6,7 +6,8 @@ and produces yearly statistics (hours worked and rides per person). The UI is in
 ## Tech Stack
 
 - **Angular 21**, standalone components, **signals**, **zoneless** change detection, Angular Router, Angular Material 21
-- **Firebase** with the **native SDK only** (`firebase` 10): Firestore, Authentication (email/password, personal logins), Hosting. No `@angular/fire`.
+- **Firebase** with the **native SDK only** (`firebase` 10): Firestore, Authentication (email/password), Hosting. No `@angular/fire`.
+  Access is role-based: one shared `STATION` login for the daily work, personal `ADMIN` logins for the report and user maintenance.
 - Tests: Karma/Jasmine (unit + integration), `@firebase/rules-unit-testing` (rules), Playwright (e2e), all against the Firebase emulators
 - Firebase project ID: `rk-strobl-journalblatt`
 
@@ -53,11 +54,13 @@ Business rules belong in `domain/` as pure functions with unit tests. Firestore 
 
 ## Firestore collections
 
+- `users` – doc ID = Auth uid; `email`, `name`, `role` (`STATION` | `ADMIN`), `active`. An Auth account without an active
+  entry gets no data. Only admins read/write other entries; nobody changes their own role/active or removes themselves
 - `persons`, `vehicles` – master data, read-only for clients
 - `tours` – `members[]` embedded; denormalized `start`/`end` (end = null while active) for queries only
 - `rides`
 - All tours/rides carry `createdBy/createdAt/updatedBy/updatedAt`, set by the repositories and checked by `firestore.rules`
-- Legacy `car-tour` / `rescue-operation` are no longer used (rules keep them open until the cut-over cleanup)
+- Legacy `car-tour` / `rescue-operation` are no longer used (rules keep them open to members until the cut-over cleanup)
 
 ## Commands
 

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, inject} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatToolbarModule} from '@angular/material/toolbar';
@@ -22,11 +22,14 @@ import {SessionService} from '../application/session.service';
       }
     </mat-toolbar>
 
-    @if (session.isLoggedIn()) {
+    @if (hasAccess()) {
       <nav class="nav">
         <a mat-button routerLink="/fahrten" routerLinkActive="active"><mat-icon>subject</mat-icon> Fahrten</a>
         <a mat-button routerLink="/touren" routerLinkActive="active"><mat-icon>people_outline</mat-icon> Dienstmannschaft</a>
-        <a mat-button routerLink="/bericht" routerLinkActive="active"><mat-icon>bar_chart</mat-icon> Jahresbericht</a>
+        @if (session.isAdmin()) {
+          <a mat-button routerLink="/bericht" routerLinkActive="active"><mat-icon>bar_chart</mat-icon> Jahresbericht</a>
+          <a mat-button routerLink="/benutzer" routerLinkActive="active"><mat-icon>manage_accounts</mat-icon> Benutzer</a>
+        }
       </nav>
     }
 
@@ -53,6 +56,24 @@ import {SessionService} from '../application/session.service';
 export class AppComponent {
   protected readonly session = inject(SessionService);
   private readonly router = inject(Router);
+
+  protected readonly hasAccess = computed(() => {
+    const a = this.session.access();
+    return a === 'STATION' || a === 'ADMIN';
+  });
+
+  constructor() {
+    // Follow access changes in an open session (deactivated, removed or demoted by an admin).
+    effect(() => {
+      const access = this.session.access();
+      const url = this.router.url;
+      if (access === 'NONE' && !url.startsWith('/kein-zugang')) {
+        void this.router.navigate(['/kein-zugang']);
+      } else if (access === 'STATION' && (url.startsWith('/bericht') || url.startsWith('/benutzer'))) {
+        void this.router.navigate(['/fahrten']);
+      }
+    });
+  }
 
   async logout(): Promise<void> {
     await this.session.logout();

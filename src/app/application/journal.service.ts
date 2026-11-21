@@ -46,7 +46,7 @@ export class JournalService {
 
   /** Listener window is fixed at login; the computed signals below narrow it as time passes. */
   private readonly loadedTours = toSignal(
-    this.session.user$.pipe(
+    this.session.member$.pipe(
       switchMap(u => (u ? this.tourRepo.watchDaily(untracked(this.windowStart)) : of([]))),
       catchError(err => {
         console.error('Touren konnten nicht geladen werden', err);
@@ -57,7 +57,7 @@ export class JournalService {
   );
 
   private readonly loadedRides = toSignal(
-    this.session.user$.pipe(
+    this.session.member$.pipe(
       switchMap(u => (u ? this.rideRepo.watchSince(untracked(this.windowStart)) : of([]))),
       catchError(err => {
         console.error('Fahrten konnten nicht geladen werden', err);

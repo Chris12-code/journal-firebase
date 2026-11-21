@@ -4,7 +4,8 @@ import {BehaviorSubject, map, Observable} from 'rxjs';
 import {Person, Ride, Tour, Vehicle} from '../../domain/model';
 import {tourEnd, tourStart} from '../../domain/tour';
 import {Clock} from '../clock';
-import {AuthGateway, MasterDataRepository, RideRepository, SessionUser, TourRepository} from '../ports';
+import {UserEntry} from '../../domain/user';
+import {AuthGateway, MasterDataRepository, NewUser, RideRepository, SessionUser, TourRepository, UserChanges, UserRepository} from '../ports';
 
 export class FakeAuthGateway extends AuthGateway {
   readonly subject = new BehaviorSubject<SessionUser | null>(null);
@@ -18,6 +19,59 @@ export class FakeAuthGateway extends AuthGateway {
 
   async logout(): Promise<void> {
     this.subject.next(null);
+  }
+
+  /** User entries by uid; set an entry to `null` to simulate a missing one. `u1` is an active station user by default. */
+  readonly entries = new BehaviorSubject<Record<string, UserEntry | null>>({
+    u1: {uid: 'u1', email: 'station@example.com', name: 'RK Strobl', role: 'STATION', active: true},
+  });
+  resets: string[] = [];
+
+  access$(uid: string): Observable<UserEntry | null> {
+    return this.entries.pipe(map(e => e[uid] ?? null));
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    if (this.failWith) throw Object.assign(new Error(this.failWith), {code: this.failWith});
+    this.resets.push(email);
+  }
+
+  /** Logs in as `uid` with the given user entry (or none). */
+  loginAs(uid: string, entry: Omit<UserEntry, 'uid'> | null): void {
+    this.entries.next({...this.entries.value, [uid]: entry && {...entry, uid}});
+    this.subject.next({uid, email: entry?.email ?? `${uid}@example.com`});
+  }
+
+  setEntry(uid: string, entry: Omit<UserEntry, 'uid'> | null): void {
+    this.entries.next({...this.entries.value, [uid]: entry && {...entry, uid}});
+  }
+}
+
+export class FakeUserRepository extends UserRepository {
+  readonly store = new BehaviorSubject<UserEntry[]>([]);
+  failWith?: string;
+  created: NewUser[] = [];
+
+  list$(): Observable<UserEntry[]> {
+    return this.store.asObservable();
+  }
+
+  async create(user: NewUser): Promise<string> {
+    if (this.failWith) throw Object.assign(new Error(this.failWith), {code: this.failWith});
+    const uid = `new${this.created.length + 1}`;
+    this.created.push(user);
+    this.store.next([...this.store.value, {uid, email: user.email, name: user.name, role: user.role, active: true}]);
+    return uid;
+  }
+
+  async update(uid: string, changes: UserChanges): Promise<void> {
+    if (this.failWith) throw Object.assign(new Error(this.failWith), {code: this.failWith});
+    this.store.next(this.store.value.map(u => (u.uid === uid ? {...u, ...changes} : u)));
+  }
+
+  async remove(uid: string): Promise<void> {
+    if (this.failWith) throw Object.assign(new Error(this.failWith), {code: this.failWith});
+    this.store.next(this.store.value.filter(u => u.uid !== uid));
   }
 }
 
@@ -125,18 +179,21 @@ export function fakeProviders(at: Date) {
   const masterData = new FakeMasterDataRepository();
   const tours = new FakeTourRepository();
   const rides = new FakeRideRepository();
+  const users = new FakeUserRepository();
   const {clock, now} = fakeClock(at);
   return {
     auth,
     masterData,
     tours,
     rides,
+    users,
     now,
     providers: [
       {provide: AuthGateway, useValue: auth},
       {provide: MasterDataRepository, useValue: masterData},
       {provide: TourRepository, useValue: tours},
       {provide: RideRepository, useValue: rides},
+      {provide: UserRepository, useValue: users},
       {provide: Clock, useValue: clock},
     ],
   };

@@ -47,6 +47,24 @@ describe('JournalService', () => {
       expect(fx.rides.watchers).toBe(0);
       expect(journal.tours()).toEqual([]);
     });
+
+    it('does not listen for an account without access', async () => {
+      fx.auth.loginAs('nobody', null);
+      await flush();
+      expect(fx.tours.watchers).toBe(0);
+      expect(fx.rides.watchers).toBe(0);
+    });
+
+    it('stops listening when the account is deactivated', async () => {
+      fx.auth.loginAs('station', {email: 's@example.com', name: 'RK Strobl', role: 'STATION', active: true});
+      await flush();
+      expect(fx.tours.watchers).toBe(1);
+
+      fx.auth.setEntry('station', {email: 's@example.com', name: 'RK Strobl', role: 'STATION', active: false});
+      await flush();
+      expect(fx.tours.watchers).toBe(0);
+      expect(fx.rides.watchers).toBe(0);
+    });
   });
 
   describe('daily view', () => {

@@ -9,14 +9,14 @@ import {SessionService} from './session.service';
 const byName = (a: Person, b: Person) => a.name.localeCompare(b.name, 'de');
 const byNumber = (a: Vehicle, b: Vehicle) => a.number.localeCompare(b.number);
 
-/** Persons and vehicles (spec master-data), loaded once per login. */
+/** Persons and vehicles (spec master-data), loaded once per login with access. */
 @Injectable({providedIn: 'root'})
 export class MasterDataService {
   private readonly repo = inject(MasterDataRepository);
   private readonly session = inject(SessionService);
 
   readonly persons = toSignal(
-    this.session.user$.pipe(
+    this.session.member$.pipe(
       switchMap(u => (u ? from(this.repo.loadPersons()) : of([]))),
       catchError(err => {
         console.error('Personen konnten nicht geladen werden', err);
@@ -28,7 +28,7 @@ export class MasterDataService {
 
   /** Built-in default vehicles merged with the stored ones (stored entries win). */
   readonly vehicles = toSignal(
-    this.session.user$.pipe(
+    this.session.member$.pipe(
       switchMap(u => (u ? from(this.repo.loadVehicles()) : of([]))),
       map(stored => withDefaultVehicles(stored)),
       catchError(err => {

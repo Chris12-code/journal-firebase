@@ -1,6 +1,6 @@
 import {expect, Page, test} from '@playwright/test';
-import {loginAs} from '../helpers/auth';
-import {seedMasterData} from '../helpers/emulator';
+import {loginAs, switchTo} from '../helpers/auth';
+import {seedMasterData, TEST_ACCOUNTS} from '../helpers/emulator';
 import {choose, dialog, fillDateTime, tourCard} from '../helpers/ui';
 
 // Full day on the journal sheet through the UI, then the yearly report against hand-calculated totals.
@@ -105,6 +105,8 @@ test('walkthrough: a full day on the journal sheet adds up in the yearly report'
   await expect(night.getByText(/^beendet/)).toBeVisible();
 
   // Yearly report against hand-calculated values
+  // The report is for admins only
+  await switchTo(page, TEST_ACCOUNTS.admin);
   await page.getByRole('link', {name: /Jahresbericht/}).click();
   if (B.getFullYear() !== now.getFullYear()) {
     await page.getByRole('combobox', {name: 'Jahr'}).click();

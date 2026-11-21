@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 import {loginAs} from '../helpers/auth';
-import {putDoc, seedMasterData} from '../helpers/emulator';
+import {putDoc, seedMasterData, TEST_ACCOUNTS} from '../helpers/emulator';
 
 const year = new Date().getFullYear();
 /** Local time on 2 January (+ day offset) of the current year. */
@@ -85,7 +85,7 @@ test.beforeEach(async () => {
 });
 
 test('report: yearly hours and rides per person', async ({page}) => {
-  await loginAs(page);
+  await loginAs(page, TEST_ACCOUNTS.admin);
   await page.getByRole('link', {name: /Jahresbericht/}).click();
 
   const row = (personId: string) => page.locator(`tr[data-person="${personId}"]`);
